@@ -9,6 +9,9 @@ declare global {
     }
 }
 
+let provider;
+let signer;
+
 console.log(spoolABI);
 
 console.log("Hello Cross-chain Gitcoin donations!");
@@ -89,7 +92,7 @@ const originChainId = 11155111;
 const destinationChainId = 84532;
 
 document
-    .getElementById("connectButton")
+    .getElementById("connectWalletButton")
     ?.addEventListener("click", async () => {
         if (typeof window.ethereum !== "undefined") {
             try {
@@ -97,10 +100,10 @@ document
                 await window.ethereum.request({method: "eth_requestAccounts"});
 
                 // Create a Web3 provider from the window.ethereum object
-                const provider = new ethers.BrowserProvider(window.ethereum);
+                provider = new ethers.BrowserProvider(window.ethereum);
 
                 // You now have access to the user's wallet
-                const signer = await provider.getSigner();
+                signer = await provider.getSigner();
                 console.log("Connected account:", signer.address);
             } catch (error) {
                 console.error("Error connecting to wallet:", error);
