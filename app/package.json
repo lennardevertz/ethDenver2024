@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/lennardevertz/ethDenver2024#readme",
   "dependencies": {
-    "ethers": "^6.11.1",
+    "ethers": "^5.7.0",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
