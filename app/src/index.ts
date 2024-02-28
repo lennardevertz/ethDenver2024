@@ -1,7 +1,9 @@
+console.log("Hello Cross-chain Gitcoin donations!");
 // Ethers V6
 import {ethers} from "ethers";
 
 import spoolABI from "../../contracts/abi/spokePool.json";
+import { ISpokePool } from "./spool";
 
 declare global {
     interface Window {
@@ -9,12 +11,12 @@ declare global {
     }
 }
 
-let provider;
-let signer;
+type SpoolContract = ethers.Contract & ISpokePool;
 
-console.log(spoolABI);
 
-console.log("Hello Cross-chain Gitcoin donations!");
+let provider: ethers.BrowserProvider;
+let signer: ethers.Signer;
+let contractOrigin: SpoolContract;
 
 function generateMessage(userAddress: string) {
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
@@ -61,15 +63,31 @@ const CONTRACTS = {
             blockNumber: 6082004,
         },
     },
+    "8453": {
+        SpokePool: {
+            address: "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64",
+            blockNumber: 2164878,
+        },
+        SpokePoolVerifier: {
+            address: "0x269727F088F16E1Aea52Cf5a97B1CD41DAA3f02D",
+            blockNumber: 4822423,
+        },
+    },
+    "420": {
+        SpokePool: {
+            address: "0xeF684C38F94F48775959ECf2012D7E864ffb9dd4",
+            blockNumber: 17025501,
+        },
+    },
 };
 
 async function callAcrossAPI(
-    endpointKey: keyof ApiEndpoints,
+    endpoint: string,
     params?: QueryParams
 ): Promise<any> {
     try {
         // Build the URL with query parameters
-        let url = new URL(endpoints[endpointKey]);
+        let url = new URL(endpoint);
         if (params) {
             Object.keys(params).forEach((key) =>
                 url.searchParams.append(key, params[key].toString())
@@ -104,7 +122,7 @@ document
 
                 // You now have access to the user's wallet
                 signer = await provider.getSigner();
-                console.log("Connected account:", signer.address);
+                console.log("Connected account:", await signer.getAddress());
             } catch (error) {
                 console.error("Error connecting to wallet:", error);
             }
@@ -114,3 +132,27 @@ document
             );
         }
     });
+document
+    .getElementById("setupContract")
+    ?.addEventListener("click", async () => {
+        if (typeof provider !== "undefined") {
+            try {
+                contractOrigin = new ethers.Contract(
+                    CONTRACTS["8453"].SpokePool.address,
+                    spoolABI,
+                    provider
+                ) as SpoolContract;
+                console.log("Contract set up on Base: ", await contractOrigin.getAddress())
+                const chainId = await contractOrigin.chainId()
+                console.log("chainId is ", chainId)
+            } catch (error) {
+                console.error("Error creating contract:", error);
+            }
+        } else {
+            console.log(
+                "No provider detected. Please connect your wallet first."
+            );
+        }
+    });
+
+
