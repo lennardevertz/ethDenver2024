@@ -4,6 +4,9 @@
   "description": "ETHDenver Hackathon project",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
+    "buildDev": "tsc --watch",
+    "start": "http-server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -15,5 +18,13 @@
   "bugs": {
     "url": "https://github.com/lennardevertz/ethDenver2024/issues"
   },
-  "homepage": "https://github.com/lennardevertz/ethDenver2024#readme"
+  "homepage": "https://github.com/lennardevertz/ethDenver2024#readme",
+  "dependencies": {
+    "ethers": "^6.11.1",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "nodemon": "^3.1.0"
+  }
 }
