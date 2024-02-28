@@ -4,8 +4,8 @@
   "description": "ETHDenver Hackathon project",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "buildDev": "tsc --watch",
+    "build": "webpack",
+    "buildDev": "webpack --watch",
     "start": "http-server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -25,6 +25,9 @@
   },
   "devDependencies": {
     "http-server": "^14.1.1",
-    "nodemon": "^3.1.0"
+    "nodemon": "^3.1.0",
+    "ts-loader": "^9.5.1",
+    "webpack": "^5.90.3",
+    "webpack-cli": "^5.1.4"
   }
 }
