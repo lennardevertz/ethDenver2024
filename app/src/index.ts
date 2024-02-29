@@ -1,15 +1,22 @@
 console.log("Hello Cross-chain Gitcoin donations!");
 // Ethers V5
 import {BigNumberish, ethers} from "ethers";
+import dotenv from 'dotenv';
 
 import spoolABI from "../../contracts/abi/spokePool.json";
+import ACROSS_MOCK_FEE_RESPONSE from "./static/ACCROSS_MOCK_FEE_RESPONSE.json";
+import ACROSS_MOCK_LIMIT_RESPONSE from "./static/ACCROSS_MOCK_LIMIT_RESPONSE.json";
+import SUPPORTED_TOKEN from "./static/token.json";
+import CONTRACTS from "./static/ACROSS_CONTRACTS.json";
 import {ISpokePool} from "./static/spool";
-console.log(ethers.version);
+
 declare global {
     interface Window {
         ethereum: any;
     }
 }
+dotenv.config();
+console.log(process.env)
 
 type SpoolContract = ethers.Contract & ISpokePool;
 
@@ -37,58 +44,12 @@ const endpoints: ApiEndpoints = {
     routes: "https://across.to/api/available-routes",
 };
 
-const SUPPORTED_TOKEN = {"11155111_eth": "0x", "84532_eth": "0x"};
-const CONTRACTS = {
-    "11155111": {
-        AcrossConfigStore: {
-            address: "0xB3De1e212B49e68f4a68b5993f31f63946FCA2a6",
-            blockNumber: 4968255,
-        },
-        LPTokenFactory: {
-            address: "0xFB87Ac52Bac7ccF497b6053610A9c59B87a0cE7D",
-            blockNumber: 4911834,
-        },
-        HubPool: {
-            address: "0x14224e63716aface30c9a417e0542281869f7d9e",
-            blockNumber: 4911835,
-        },
-        SpokePool: {
-            address: "0x5ef6C01E11889d86803e0B23e3cB3F9E9d97B662",
-            blockNumber: 5288470,
-        },
-    },
-    "84532": {
-        SpokePool: {
-            address: "0x82B564983aE7274c86695917BBf8C99ECb6F0F8F",
-            blockNumber: 6082004,
-        },
-    },
-    "8453": {
-        SpokePool: {
-            address: "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64",
-            blockNumber: 2164878,
-        },
-        SpokePoolVerifier: {
-            address: "0x269727F088F16E1Aea52Cf5a97B1CD41DAA3f02D",
-            blockNumber: 4822423,
-        },
-    },
-    "10": {
-        SpokePool: {
-            address: "0x6f26Bf09B1C792e3228e5467807a900A503c0281",
-            blockNumber: 93903076,
-        },
-        SpokePoolVerifier: {
-            address: "0x269727F088F16E1Aea52Cf5a97B1CD41DAA3f02D",
-            blockNumber: 110419958,
-        },
-    },
-};
-
 async function callAcrossAPI(
     endpoint: string,
     params?: QueryParams
 ): Promise<any> {
+    if (endpoint == endpoints.fee) return ACROSS_MOCK_FEE_RESPONSE;
+    if (endpoint == endpoints.limits) return ACROSS_MOCK_LIMIT_RESPONSE;
     try {
         // Build the URL with query parameters
         let url = new URL(endpoint);
@@ -109,6 +70,32 @@ async function callAcrossAPI(
         return null;
     }
 }
+
+async function getSwapPrice(sellToken: string, buyToken: string, sellAmount: number): Promise<any> {
+    const apiKey = process.env.PRICING;
+    if (!apiKey) {
+        throw new Error('API key is not defined in .env file');
+    }
+
+    const url = `https://api.0x.org/swap/v1/price?sellToken=${sellToken}&buyToken=${buyToken}&sellAmount=${sellAmount}`;
+    const headers = {
+        '0x-api-key': apiKey
+    };
+
+    try {
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching swap price:', error);
+        return null;
+    }
+}
+
+// const price = await getSwapPrice("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", 10000000)
+// const ethAmount = price.buyAmount;
 
 document
     .getElementById("connectWalletButton")
@@ -139,12 +126,12 @@ document
         if (typeof provider !== "undefined") {
             try {
                 contractOrigin = new ethers.Contract(
-                    CONTRACTS["8453"].SpokePool.address,
+                    CONTRACTS["11155111"].SpokePool.address,
                     spoolABI,
                     signer
                 ) as SpoolContract;
                 console.log(
-                    "Contract set up on Base: ",
+                    "Contract set up on Sepolia: ",
                     await contractOrigin.address
                 );
                 const chainId = await contractOrigin.chainId();
@@ -162,11 +149,12 @@ document
 document.getElementById("callBridge")?.addEventListener("click", async () => {
     if (typeof provider !== "undefined") {
         try {
-            const originChainId = 8453 as number;
-            const destinationChainId = 10 as number;
-            const token = "0x4200000000000000000000000000000000000006";
+            const originChainId = 11155111  as number;
+            const destinationChainId = 84532 as number;
+            const token = SUPPORTED_TOKEN["11155111_eth"];
             const amount = ethers.BigNumber.from("4000000000000000");
 
+            //Check if route is available
             availableRoutes = await callAcrossAPI(endpoints.routes, {});
 
             const suggested_fees = await callAcrossAPI(endpoints.fee, {
@@ -262,7 +250,8 @@ async function depositToSpokePool(
         ];
         console.log(params);
 
-        const args = [userAddress,
+        const args = [
+            userAddress,
             userAddress,
             assetAddress,
             outputToken,
@@ -273,54 +262,30 @@ async function depositToSpokePool(
             timestamp,
             fillDeadline,
             exclusivityDeadline,
-            message]
+            message,
+        ];
 
-        const preparedTx = await contractOrigin.populateTransaction["depositV3"](...args)
+        const preparedTx = await contractOrigin.populateTransaction[
+            "depositV3"
+        ](...args);
 
-        console.log(preparedTx)
-        console.log({...preparedTx})
-        console.log(...args)
+        console.log("transaction data", {...preparedTx});
 
         const sendOptions = {
             from: await signer.getAddress(),
-            value: amount.toString()
+            value: amount.toString(),
         };
 
         const result = await signer.sendTransaction({
             ...preparedTx,
             ...sendOptions,
             to: contractOrigin.address,
-          });
+        });
         const minedResult = await result.wait();
 
-        console.log(minedResult)
-          
+        console.log(minedResult);
 
-        // const tx = contractOrigin.depositV3(
-        //     userAddress,
-        //     userAddress,
-        //     assetAddress,
-        //     outputToken,
-        //     amount,
-        //     outputAmount,
-        //     destinationChainId,
-        //     exclusiveRelayer,
-        //     timestamp,
-        //     fillDeadline,
-        //     exclusivityDeadline,
-        //     message
-        // );
-        // (await tx).value = amount;
-
-        // tx.
-        // const approveTxSigned = await signer.signTransaction(tx)
-
-        // const submittedTx = await provider.sendTransaction(approveTxSigned);
-        // const approveReceipt = await submittedTx.wait();
-        // if (approveReceipt.status === 0)
-        //     throw new Error("Approve transaction failed");
-
-        console.log("Deposit successful");
+        console.log("Deposit successful", minedResult.transactionHash);
     } catch (error) {
         console.error("Error in deposit:", error);
         throw error;

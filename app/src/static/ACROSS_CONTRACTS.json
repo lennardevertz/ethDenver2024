@@ -1,0 +1,46 @@
+{
+    "11155111": {
+        "AcrossConfigStore": {
+            "address": "0xB3De1e212B49e68f4a68b5993f31f63946FCA2a6",
+            "blockNumber": 4968255
+        },
+        "LPTokenFactory": {
+            "address": "0xFB87Ac52Bac7ccF497b6053610A9c59B87a0cE7D",
+            "blockNumber": 4911834
+        },
+        "HubPool": {
+            "address": "0x14224e63716aface30c9a417e0542281869f7d9e",
+            "blockNumber": 4911835
+        },
+        "SpokePool": {
+            "address": "0x5ef6C01E11889d86803e0B23e3cB3F9E9d97B662",
+            "blockNumber": 5288470
+        }
+    },
+    "84532": {
+        "SpokePool": {
+            "address": "0x82B564983aE7274c86695917BBf8C99ECb6F0F8F",
+            "blockNumber": 6082004
+        }
+    },
+    "8453": {
+        "SpokePool": {
+            "address": "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64",
+            "blockNumber": 2164878
+        },
+        "SpokePoolVerifier": {
+            "address": "0x269727F088F16E1Aea52Cf5a97B1CD41DAA3f02D",
+            "blockNumber": 4822423
+        }
+    },
+    "10": {
+        "SpokePool": {
+            "address": "0x6f26Bf09B1C792e3228e5467807a900A503c0281",
+            "blockNumber": 93903076
+        },
+        "SpokePoolVerifier": {
+            "address": "0x269727F088F16E1Aea52Cf5a97B1CD41DAA3f02D",
+            "blockNumber": 110419958
+        }
+    }
+}
