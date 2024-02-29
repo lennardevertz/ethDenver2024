@@ -1,6 +1,7 @@
 console.log("Hello Cross-chain Gitcoin donations!");
 // Ethers V5
 import {BigNumberish, ethers} from "ethers";
+import dotenv from 'dotenv';
 
 import spoolABI from "../../contracts/abi/spokePool.json";
 import ACROSS_MOCK_FEE_RESPONSE from "./static/ACCROSS_MOCK_FEE_RESPONSE.json";
@@ -14,6 +15,8 @@ declare global {
         ethereum: any;
     }
 }
+dotenv.config();
+console.log(process.env)
 
 type SpoolContract = ethers.Contract & ISpokePool;
 
@@ -67,6 +70,32 @@ async function callAcrossAPI(
         return null;
     }
 }
+
+async function getSwapPrice(sellToken: string, buyToken: string, sellAmount: number): Promise<any> {
+    const apiKey = process.env.PRICING;
+    if (!apiKey) {
+        throw new Error('API key is not defined in .env file');
+    }
+
+    const url = `https://api.0x.org/swap/v1/price?sellToken=${sellToken}&buyToken=${buyToken}&sellAmount=${sellAmount}`;
+    const headers = {
+        '0x-api-key': apiKey
+    };
+
+    try {
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching swap price:', error);
+        return null;
+    }
+}
+
+// const price = await getSwapPrice("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", 10000000)
+// const ethAmount = price.buyAmount;
 
 document
     .getElementById("connectWalletButton")
