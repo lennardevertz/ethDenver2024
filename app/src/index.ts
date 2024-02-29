@@ -3,6 +3,7 @@ console.log("Hello Cross-chain Gitcoin donations!");
 import {BigNumberish, ethers} from "ethers";
 
 import spoolABI from "../../contracts/abi/spokePool.json";
+import ACROSS_MOCK_FEE_RESPONSE from "./static/ACCROSS_MOCK_RESPONSE.json";
 import {ISpokePool} from "./static/spool";
 console.log(ethers.version);
 declare global {
@@ -37,7 +38,7 @@ const endpoints: ApiEndpoints = {
     routes: "https://across.to/api/available-routes",
 };
 
-const SUPPORTED_TOKEN = {"11155111_eth": "0x", "84532_eth": "0x"};
+const SUPPORTED_TOKEN = {"11155111_eth": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14", "84532_eth": "0x4200000000000000000000000000000000000006"};
 const CONTRACTS = {
     "11155111": {
         AcrossConfigStore: {
@@ -89,6 +90,7 @@ async function callAcrossAPI(
     endpoint: string,
     params?: QueryParams
 ): Promise<any> {
+    if (endpoint == endpoints.fee) return ACROSS_MOCK_FEE_RESPONSE;
     try {
         // Build the URL with query parameters
         let url = new URL(endpoint);
@@ -139,12 +141,12 @@ document
         if (typeof provider !== "undefined") {
             try {
                 contractOrigin = new ethers.Contract(
-                    CONTRACTS["8453"].SpokePool.address,
+                    CONTRACTS["11155111"].SpokePool.address,
                     spoolABI,
                     signer
                 ) as SpoolContract;
                 console.log(
-                    "Contract set up on Base: ",
+                    "Contract set up on Sepolia: ",
                     await contractOrigin.address
                 );
                 const chainId = await contractOrigin.chainId();
@@ -326,3 +328,4 @@ async function depositToSpokePool(
         throw error;
     }
 }
+

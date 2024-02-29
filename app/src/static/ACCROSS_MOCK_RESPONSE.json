@@ -1,0 +1,29 @@
+{
+    "capitalFeePct": "100000800000000",
+    "capitalFeeTotal": "400003200000",
+    "relayGasFeePct": "89467388402025500",
+    "relayGasFeeTotal": "357869553608102",
+    "relayFeePct": "89948281478733488",
+    "relayFeeTotal": "359793125914933",
+    "lpFeePct": "0",
+    "timestamp": "1709239500",
+    "isAmountTooLow": false,
+    "quoteBlock": "19335634",
+    "spokePoolAddress": "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64",
+    "totalRelayFee": {
+        "pct": "89948281478733488",
+        "total": "359793125914933"
+    },
+    "relayerCapitalFee": {
+        "pct": "100000800000000",
+        "total": "400003200000"
+    },
+    "relayerGasFee": {
+        "pct": "89467388402025500",
+        "total": "357869553608102"
+    },
+    "lpFee": {
+        "pct": "380892276707988",
+        "total": "1523569106831"
+    }
+}
