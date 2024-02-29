@@ -3,9 +3,12 @@ console.log("Hello Cross-chain Gitcoin donations!");
 import {BigNumberish, ethers} from "ethers";
 
 import spoolABI from "../../contracts/abi/spokePool.json";
-import ACROSS_MOCK_FEE_RESPONSE from "./static/ACCROSS_MOCK_RESPONSE.json";
+import ACROSS_MOCK_FEE_RESPONSE from "./static/ACCROSS_MOCK_FEE_RESPONSE.json";
+import ACROSS_MOCK_LIMIT_RESPONSE from "./static/ACCROSS_MOCK_LIMIT_RESPONSE.json";
+import SUPPORTED_TOKEN from "./static/token.json";
+import CONTRACTS from "./static/ACROSS_CONTRACTS.json";
 import {ISpokePool} from "./static/spool";
-console.log(ethers.version);
+
 declare global {
     interface Window {
         ethereum: any;
@@ -38,59 +41,12 @@ const endpoints: ApiEndpoints = {
     routes: "https://across.to/api/available-routes",
 };
 
-const SUPPORTED_TOKEN = {"11155111_eth": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14", "84532_eth": "0x4200000000000000000000000000000000000006"};
-const CONTRACTS = {
-    "11155111": {
-        AcrossConfigStore: {
-            address: "0xB3De1e212B49e68f4a68b5993f31f63946FCA2a6",
-            blockNumber: 4968255,
-        },
-        LPTokenFactory: {
-            address: "0xFB87Ac52Bac7ccF497b6053610A9c59B87a0cE7D",
-            blockNumber: 4911834,
-        },
-        HubPool: {
-            address: "0x14224e63716aface30c9a417e0542281869f7d9e",
-            blockNumber: 4911835,
-        },
-        SpokePool: {
-            address: "0x5ef6C01E11889d86803e0B23e3cB3F9E9d97B662",
-            blockNumber: 5288470,
-        },
-    },
-    "84532": {
-        SpokePool: {
-            address: "0x82B564983aE7274c86695917BBf8C99ECb6F0F8F",
-            blockNumber: 6082004,
-        },
-    },
-    "8453": {
-        SpokePool: {
-            address: "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64",
-            blockNumber: 2164878,
-        },
-        SpokePoolVerifier: {
-            address: "0x269727F088F16E1Aea52Cf5a97B1CD41DAA3f02D",
-            blockNumber: 4822423,
-        },
-    },
-    "10": {
-        SpokePool: {
-            address: "0x6f26Bf09B1C792e3228e5467807a900A503c0281",
-            blockNumber: 93903076,
-        },
-        SpokePoolVerifier: {
-            address: "0x269727F088F16E1Aea52Cf5a97B1CD41DAA3f02D",
-            blockNumber: 110419958,
-        },
-    },
-};
-
 async function callAcrossAPI(
     endpoint: string,
     params?: QueryParams
 ): Promise<any> {
     if (endpoint == endpoints.fee) return ACROSS_MOCK_FEE_RESPONSE;
+    if (endpoint == endpoints.limits) return ACROSS_MOCK_LIMIT_RESPONSE;
     try {
         // Build the URL with query parameters
         let url = new URL(endpoint);
@@ -164,11 +120,12 @@ document
 document.getElementById("callBridge")?.addEventListener("click", async () => {
     if (typeof provider !== "undefined") {
         try {
-            const originChainId = 8453 as number;
-            const destinationChainId = 10 as number;
-            const token = "0x4200000000000000000000000000000000000006";
+            const originChainId = 11155111  as number;
+            const destinationChainId = 84532 as number;
+            const token = SUPPORTED_TOKEN["11155111_eth"];
             const amount = ethers.BigNumber.from("4000000000000000");
 
+            //Check if route is available
             availableRoutes = await callAcrossAPI(endpoints.routes, {});
 
             const suggested_fees = await callAcrossAPI(endpoints.fee, {
@@ -264,7 +221,8 @@ async function depositToSpokePool(
         ];
         console.log(params);
 
-        const args = [userAddress,
+        const args = [
+            userAddress,
             userAddress,
             assetAddress,
             outputToken,
@@ -275,57 +233,32 @@ async function depositToSpokePool(
             timestamp,
             fillDeadline,
             exclusivityDeadline,
-            message]
+            message,
+        ];
 
-        const preparedTx = await contractOrigin.populateTransaction["depositV3"](...args)
+        const preparedTx = await contractOrigin.populateTransaction[
+            "depositV3"
+        ](...args);
 
-        console.log(preparedTx)
-        console.log({...preparedTx})
-        console.log(...args)
+        console.log("transaction data", {...preparedTx});
 
         const sendOptions = {
             from: await signer.getAddress(),
-            value: amount.toString()
+            value: amount.toString(),
         };
 
         const result = await signer.sendTransaction({
             ...preparedTx,
             ...sendOptions,
             to: contractOrigin.address,
-          });
+        });
         const minedResult = await result.wait();
 
-        console.log(minedResult)
-          
+        console.log(minedResult);
 
-        // const tx = contractOrigin.depositV3(
-        //     userAddress,
-        //     userAddress,
-        //     assetAddress,
-        //     outputToken,
-        //     amount,
-        //     outputAmount,
-        //     destinationChainId,
-        //     exclusiveRelayer,
-        //     timestamp,
-        //     fillDeadline,
-        //     exclusivityDeadline,
-        //     message
-        // );
-        // (await tx).value = amount;
-
-        // tx.
-        // const approveTxSigned = await signer.signTransaction(tx)
-
-        // const submittedTx = await provider.sendTransaction(approveTxSigned);
-        // const approveReceipt = await submittedTx.wait();
-        // if (approveReceipt.status === 0)
-        //     throw new Error("Approve transaction failed");
-
-        console.log("Deposit successful");
+        console.log("Deposit successful", minedResult.transactionHash);
     } catch (error) {
         console.error("Error in deposit:", error);
         throw error;
     }
 }
-
