@@ -9,6 +9,4 @@ node_modules
 /typechain
 /typechain-types
 
-# solidity-coverage files
-/coverage
-/coverage.json
+/src/artifacts

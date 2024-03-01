@@ -25,9 +25,13 @@ let signer: ethers.Signer;
 let contractOrigin: SpoolContract;
 let availableRoutes;
 
-function generateMessage(userAddress: string) {
-    const abiCoder = ethers.utils.defaultAbiCoder;
-    return abiCoder.encode(["address"], [userAddress]);
+const dummyGranteeId = 1;
+const dummyApplicationIndex = 1;
+const dummyRound = "0x0000000000000000000000000000000000000000"
+
+function generateMessage(userAddress: string, granteeAddress: string, granteeId: number, round: string, applicationIndex: number) {
+  const abiCoder = ethers.utils.defaultAbiCoder;
+  return abiCoder.encode(["address", "address", "uint256", "address", "uint256"], [userAddress, granteeAddress, granteeId, round, applicationIndex]);
 }
 
 type ApiEndpoints = {
@@ -48,8 +52,8 @@ async function callAcrossAPI(
     endpoint: string,
     params?: QueryParams
 ): Promise<any> {
-    if (endpoint == endpoints.fee) return ACROSS_MOCK_FEE_RESPONSE;
-    if (endpoint == endpoints.limits) return ACROSS_MOCK_LIMIT_RESPONSE;
+    // if (endpoint == endpoints.fee) return ACROSS_MOCK_FEE_RESPONSE;
+    // if (endpoint == endpoints.limits) return ACROSS_MOCK_LIMIT_RESPONSE;
     try {
         // Build the URL with query parameters
         let url = new URL(endpoint);
@@ -123,7 +127,8 @@ document
 document
     .getElementById("setupContract")
     ?.addEventListener("click", async () => {
-        if (typeof provider !== "undefined") {
+        if (typeof signer !== "undefined") {
+            console.log(CONTRACTS["11155111"].SpokePool.address)
             try {
                 contractOrigin = new ethers.Contract(
                     CONTRACTS["11155111"].SpokePool.address,
@@ -158,9 +163,9 @@ document.getElementById("callBridge")?.addEventListener("click", async () => {
             availableRoutes = await callAcrossAPI(endpoints.routes, {});
 
             const suggested_fees = await callAcrossAPI(endpoints.fee, {
-                originChainId: originChainId,
-                destinationChainId: destinationChainId,
-                token: token,
+                originChainId: 1,
+                destinationChainId: 8453,
+                token: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
                 amount: amount.toString(),
             });
             console.log(suggested_fees);
@@ -175,9 +180,9 @@ document.getElementById("callBridge")?.addEventListener("click", async () => {
             const timestamp = suggested_fees.timestamp as number;
             console.log("Timestamp", timestamp);
             const limits = await callAcrossAPI(endpoints.limits, {
-                originChainId: originChainId,
-                destinationChainId: destinationChainId,
-                token: token,
+                originChainId: 1,
+                destinationChainId: 8453,
+                token: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
             });
             console.log("limits: ", limits);
             const maxDepositInstant = limits.maxDepositInstant;
@@ -227,28 +232,13 @@ async function depositToSpokePool(
         const exclusiveRelayer = "0x0000000000000000000000000000000000000000";
         const fillDeadline = Math.round(Date.now() / 1000) + 21600; // 6 hours from now
         const exclusivityDeadline = 0;
-        const message = "0x"; // for normal bridge
+        const message = generateMessage(await signer.getAddress(), await signer.getAddress(), dummyGranteeId, dummyRound, dummyApplicationIndex); // use sender as dummy grantee address
 
         const outputAmount = ethers.BigNumber.from(amount).sub(
             ethers.BigNumber.from(totalRelayFee.total)
         );
         console.log(outputAmount);
-
-        let params = [
-            userAddress,
-            userAddress,
-            assetAddress,
-            outputToken,
-            amount,
-            outputAmount,
-            destinationChainId,
-            exclusiveRelayer,
-            timestamp,
-            fillDeadline,
-            exclusivityDeadline,
-            message,
-        ];
-        console.log(params);
+        
 
         const args = [
             userAddress,

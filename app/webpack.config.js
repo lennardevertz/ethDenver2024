@@ -1,3 +1,4 @@
+const webpack = require('webpack');
 const path = require("path");
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
 require('dotenv').config();
@@ -23,6 +24,6 @@ module.exports = {
     },
     plugins: [
         new NodePolyfillPlugin(),
-        new webpack.EnvironmentPlugin(["API_KEY"]),
+        // new webpack.EnvironmentPlugin(["API_KEY"]),
     ],
 };
