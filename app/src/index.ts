@@ -1,7 +1,7 @@
 console.log("Hello Cross-chain Gitcoin donations!");
 // Ethers V5
 import {BigNumberish, ethers} from "ethers";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 
 import spoolABI from "../../contracts/abi/spokePool.json";
 import ACROSS_MOCK_FEE_RESPONSE from "./static/ACCROSS_MOCK_FEE_RESPONSE.json";
@@ -16,7 +16,7 @@ declare global {
     }
 }
 dotenv.config();
-console.log(process.env)
+console.log(process.env);
 
 type SpoolContract = ethers.Contract & ISpokePool;
 
@@ -27,11 +27,20 @@ let availableRoutes;
 
 const dummyGranteeId = 1;
 const dummyApplicationIndex = 1;
-const dummyRound = "0x0000000000000000000000000000000000000000"
+const dummyRound = "0x0000000000000000000000000000000000000000";
 
-function generateMessage(userAddress: string, granteeAddress: string, granteeId: number, round: string, applicationIndex: number) {
-  const abiCoder = ethers.utils.defaultAbiCoder;
-  return abiCoder.encode(["address", "address", "uint256", "address", "uint256"], [userAddress, granteeAddress, granteeId, round, applicationIndex]);
+function generateMessage(
+    userAddress: string,
+    granteeAddress: string,
+    granteeId: number,
+    round: string,
+    applicationIndex: number
+) {
+    const abiCoder = ethers.utils.defaultAbiCoder;
+    return abiCoder.encode(
+        ["address", "address", "uint256", "address", "uint256"],
+        [userAddress, granteeAddress, granteeId, round, applicationIndex]
+    );
 }
 
 type ApiEndpoints = {
@@ -75,25 +84,29 @@ async function callAcrossAPI(
     }
 }
 
-async function getSwapPrice(sellToken: string, buyToken: string, sellAmount: number): Promise<any> {
+async function getSwapPrice(
+    sellToken: string,
+    buyToken: string,
+    sellAmount: number
+): Promise<any> {
     const apiKey = process.env.PRICING;
     if (!apiKey) {
-        throw new Error('API key is not defined in .env file');
+        throw new Error("API key is not defined in .env file");
     }
 
     const url = `https://api.0x.org/swap/v1/price?sellToken=${sellToken}&buyToken=${buyToken}&sellAmount=${sellAmount}`;
     const headers = {
-        '0x-api-key': apiKey
+        "0x-api-key": apiKey,
     };
 
     try {
-        const response = await fetch(url, { headers });
+        const response = await fetch(url, {headers});
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         return await response.json();
     } catch (error) {
-        console.error('Error fetching swap price:', error);
+        console.error("Error fetching swap price:", error);
         return null;
     }
 }
@@ -128,7 +141,7 @@ document
     .getElementById("setupContract")
     ?.addEventListener("click", async () => {
         if (typeof signer !== "undefined") {
-            console.log(CONTRACTS["11155111"].SpokePool.address)
+            console.log(CONTRACTS["11155111"].SpokePool.address);
             try {
                 contractOrigin = new ethers.Contract(
                     CONTRACTS["11155111"].SpokePool.address,
@@ -154,7 +167,7 @@ document
 document.getElementById("callBridge")?.addEventListener("click", async () => {
     if (typeof provider !== "undefined") {
         try {
-            const originChainId = 11155111  as number;
+            const originChainId = 11155111 as number;
             const destinationChainId = 84532 as number;
             const token = SUPPORTED_TOKEN["11155111_eth"];
             const amount = ethers.BigNumber.from("4000000000000000");
@@ -232,13 +245,18 @@ async function depositToSpokePool(
         const exclusiveRelayer = "0x0000000000000000000000000000000000000000";
         const fillDeadline = Math.round(Date.now() / 1000) + 21600; // 6 hours from now
         const exclusivityDeadline = 0;
-        const message = generateMessage(await signer.getAddress(), await signer.getAddress(), dummyGranteeId, dummyRound, dummyApplicationIndex); // use sender as dummy grantee address
+        const message = generateMessage(
+            await signer.getAddress(),
+            await signer.getAddress(),
+            dummyGranteeId,
+            dummyRound,
+            dummyApplicationIndex
+        ); // use sender as dummy grantee address
 
         const outputAmount = ethers.BigNumber.from(amount).sub(
             ethers.BigNumber.from(totalRelayFee.total)
         );
         console.log(outputAmount);
-        
 
         const args = [
             userAddress,
@@ -254,6 +272,20 @@ async function depositToSpokePool(
             exclusivityDeadline,
             message,
         ];
+        
+        const depositParams = {
+            recipient: userAddress,
+            inputToken: assetAddress,
+            outputToken: outputToken,
+            inputAmount: amount,
+            outputAmount: outputAmount,
+            destinationChainId: destinationChainId,
+            exclusiveRelayer: exclusiveRelayer,
+            quoteTimestamp: timestamp,
+            fillDeadline: fillDeadline,
+            exclusivityDeadline: exclusivityDeadline,
+            message: message,
+        };
 
         const preparedTx = await contractOrigin.populateTransaction[
             "depositV3"
