@@ -41,8 +41,8 @@ let destinationContract = "Base";
 
 const networkId = {Ethereum: 11155111, Base: 84532};
 const contracts = {
-    Ethereum: donationContractAddressSepolia,
-    Base: donationContractAddressBase,
+    "11155111": donationContractAddressSepolia,
+    "84532": donationContractAddressBase,
 };
 
 function generateMessage(
@@ -128,19 +128,7 @@ async function getSwapPrice(
 }
 
 document.getElementById("callBridge")?.addEventListener("click", async () => {
-    if (!signer) {
-        // Request account access if needed
-        await window.ethereum.request({method: "eth_requestAccounts"});
-
-        // Create a Web3 provider from the window.ethereum object
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-
-        // You now have access to the user's wallet
-        signer = await provider.getSigner();
-        console.log("Connected account:", await signer.getAddress());
-    }
-    try {
-        const originChainId =
+    const originChainId =
             networkId[selectedNetwork as keyof typeof networkId];
         const destinationChainId = Object.entries(networkId)
             .filter(([networkName, _]) => networkName !== selectedNetwork)
@@ -153,20 +141,30 @@ document.getElementById("callBridge")?.addEventListener("click", async () => {
             selectedAmount * 10 ** 6
         );
         const amount = ethers.BigNumber.from(amountRequest.buyAmount);
-        
         console.log("origin: ", originChainId, selectedNetwork);
         console.log("destination: ", destinationChainId);
         console.log("token: ", token);
         console.log("amount: ", amount);
         console.log("requesting switch to ", originChainId, ethers.utils.hexValue(originChainId))
+    if (!signer) {
+        // Request account access if needed
+        await window.ethereum.request({method: "eth_requestAccounts"});
+
+        // Create a Web3 provider from the window.ethereum object
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+
+        // You now have access to the user's wallet
+        signer = await provider.getSigner();
+        console.log("Connected account:", await signer.getAddress());
 
         await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: ethers.utils.hexValue(originChainId) }],
         });
-
+    }
+    try {
         contractOrigin = new ethers.Contract(
-            contracts[selectedNetwork as keyof typeof networkId],
+            contracts[originChainId.toString() as SupportedTokenKeys],
             wrapperABI,
             signer
         ) as ethers.Contract;
@@ -263,7 +261,7 @@ async function depositToSpokePool(
         console.log("OutputAmount: ", outputAmount);
 
         const depositParams = {
-            recipient: donationContractAddressBase,
+            recipient: contracts[destinationChainId.toString() as SupportedTokenKeys],
             inputToken: assetAddress,
             outputToken: outputToken,
             inputAmount: amount,
