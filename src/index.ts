@@ -310,10 +310,12 @@ document
         b.onclick = (e: MouseEvent) => {
             document
                 .querySelectorAll<HTMLElement>("#valueSelection  > *")
-                .forEach((x: HTMLElement) =>
+                .forEach((x: HTMLElement) =>{
                     x.classList.remove("bg-[#11cc74]")
-                );
+                    x.classList.add("bg-green-100")
+        });
             b.classList.add("bg-[#11cc74]");
+            b.classList.remove("bg-green-100")
             const amount = b.getAttribute("data-amount");
             if (amount) {
                 selectedAmount = parseInt(amount, 10);
