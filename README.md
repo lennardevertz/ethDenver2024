@@ -17,8 +17,9 @@ The core feature of Gitcoin is to match donations from individual donors with fu
 
 ## Tech Stack
 
-- [Across Protocol](https://across.to/)
+- [AcrossV3 Protocol](https://across.to/)
 - [Base](https://www.base.org/)
+- [0x Price API](https://0x.org/docs/category/price-api)
 - [IDriss](https://www.idriss.xyz/)
 - Hardhat
 - Smart Contracts
