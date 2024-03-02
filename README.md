@@ -13,14 +13,15 @@ Donate to Gitcoin public goods from any major EVM chain and Bitcoin.
 There is a conflict of interest between L2s sponsoring Gitcoin rounds, and donors. L2s want to have rounds run exclusively on their chains, while donors want to be able to donate from any network where their money is. We're solving this problem by building an independent frontend interacting with Gitcoin smart contracts and enabling cross-chain donations from all major EVM chains and Bitcoin.
 
 ## Challenges
-The core feature of Gitcoin is to match donations from individual donors with funds from a matching pool provided by sponsors. The distribution of the matching pool is determined based on the number of donations, the amount donated, and the reputation of the donors. Our solution introduces a bridging interaction between the donor and the Gitcoin contract, which makes it challenging to determine the original donor. We solved this problem by issuing onchain attestations on the Base network via the Ethereum Attestation Service. This provides a relatively easy way for Gitcoin to account for these donations in their matching calculations.
+- The core feature of Gitcoin is to match donations from individual donors with funds from a matching pool provided by sponsors. The distribution of the matching pool is determined based on the number of donations, the amount donated, and the reputation of the donors. Our solution introduces a bridging interaction between the donor and the Gitcoin contract, which makes it challenging to determine the original donor. We solved this problem by issuing onchain attestations on the Base network via the Ethereum Attestation Service. This provides a relatively easy way for Gitcoin to account for these donations in their matching calculations.
+- The tBTC SDK nmp package has a nested dependency on a package that was hacked on npm in 2021. After our team member’s IDE printed critical vulnerability & malware alerts, he stopped working on the integration until the Threshold team confirmed that it’s safe to use. Unfortunately, this happened on the night before the submission deadline and there was no time to finish the integration.
 
 ## Tech Stack
 
 - [AcrossV3 Protocol](https://across.to/)
 - [Base](https://www.base.org/)
 - [0x Price API](https://0x.org/docs/category/price-api)
-- [IDriss](https://www.idriss.xyz/)
+- [IDriss Donation Widget UI](https://www.idriss.xyz/)
 - Hardhat
 - Smart Contracts
   - Donation (Base-Sepolia): [0xfA081C31c2a77c399bdE26b725478191e8e055Ca](https://sepolia.basescan.org/address/0xfA081C31c2a77c399bdE26b725478191e8e055Ca)
