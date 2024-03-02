@@ -21,7 +21,6 @@ The core feature of Gitcoin is to match donations from individual donors with fu
 - [Base](https://www.base.org/)
 - [IDriss](https://www.idriss.xyz/)
 - Hardhat
-- Truffle Dashboard
 - Smart Contracts
   - Donation (Base-Sepolia): [0xfA081C31c2a77c399bdE26b725478191e8e055Ca](https://sepolia.basescan.org/address/0xfA081C31c2a77c399bdE26b725478191e8e055Ca)
   - Donation (Sepolia): [0x43189a22A2629ff405BDD7688732b20101661848](https://sepolia.etherscan.io/address/0x43189a22A2629ff405BDD7688732b20101661848)
