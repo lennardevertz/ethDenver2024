@@ -6,14 +6,17 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {PublicGoodAttester} from "./libs/Attestation.sol";
 import {IDonations} from "./interfaces/IDonations.sol";
 import {V3SpokePoolInterface} from "./interfaces/ISpokePool.sol";
+import {WETH9Interface} from "./interfaces/IWETH.sol";
 
 contract DonationWrapper is Ownable, PublicGoodAttester {
     error Unauthorized();
 
-    address public SPOKE_POOL_RECEIVER;
-    address public SPOKE_POOL_SENDER;
+    address public SPOKE_POOL;
+    address public DONATION_ADDRESS;
+    address public WETH_ADDRESS;
     V3SpokePoolInterface spokePool;
     IDonations donationsContract;
+    WETH9Interface wethContract;
 
     struct DepositParams {
         address recipient;
@@ -26,20 +29,21 @@ contract DonationWrapper is Ownable, PublicGoodAttester {
         uint32 quoteTimestamp;
         uint32 fillDeadline;
         uint32 exclusivityDeadline;
-        bytes message;
     }
 
     constructor(
         address _eas,
         bytes32 _easSchema,
-        address _acrossSpokePoolReceiver,
-        address _acrossSpokePoolSender,
-        address _donationsContractAddress
+        address _acrossSpokePool,
+        address _donationsContractAddress,
+        address _wethAddress
     ) PublicGoodAttester(_eas, _easSchema) {
-        SPOKE_POOL_RECEIVER = _acrossSpokePoolReceiver;
-        SPOKE_POOL_SENDER = _acrossSpokePoolSender;
-        spokePool = V3SpokePoolInterface(SPOKE_POOL_SENDER);
-        donationsContract = IDonations(_donationsContractAddress);
+        SPOKE_POOL = _acrossSpokePool;
+        DONATION_ADDRESS = _donationsContractAddress;
+        WETH_ADDRESS = _wethAddress;
+        spokePool = V3SpokePoolInterface(SPOKE_POOL);
+        donationsContract = IDonations(DONATION_ADDRESS);
+        wethContract = WETH9Interface(WETH_ADDRESS);
     }
 
     function handleV3AcrossMessage(
@@ -48,7 +52,11 @@ contract DonationWrapper is Ownable, PublicGoodAttester {
         address relayer,
         bytes memory message
     ) external payable {
-        if (msg.sender != SPOKE_POOL_RECEIVER) revert Unauthorized();
+
+        if (msg.sender != SPOKE_POOL) revert Unauthorized();
+
+        // Only support WETH transfers for now. This can be switched to a swap() call in the future to allow for wider token support.
+        unwrapWETH(amount);
 
         (
             address donor,
@@ -68,10 +76,21 @@ contract DonationWrapper is Ownable, PublicGoodAttester {
             applicationIndex
         );
 
-        donationsContract.vote(encodedVote, round, tokenSent);
+        donationsContract.vote{value: amount}(encodedVote, round, tokenSent);
+
     }
 
-    function callDepositV3(DepositParams calldata params) external payable {
+    function callDepositV3(
+        DepositParams memory params,
+        bytes memory message
+    ) external payable {
+        (address donor, , , , ) = abi.decode(
+            message,
+            (address, address, uint256, address, uint256)
+        );
+
+        if (msg.sender != donor) revert Unauthorized();
+
         spokePool.depositV3{value: msg.value}(
             msg.sender, // donor
             params.recipient,
@@ -84,7 +103,14 @@ contract DonationWrapper is Ownable, PublicGoodAttester {
             params.quoteTimestamp,
             params.fillDeadline,
             params.exclusivityDeadline,
-            params.message
+            message
         );
     }
+
+    function unwrapWETH(uint256 _amount) public {
+        wethContract.withdraw(_amount);
+    }
+
+    receive() external payable {}
+
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.19;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -12,7 +12,7 @@ contract Donations is Ownable {
         bytes memory encodedVote,
         address roundContractAddress,
         address asset
-    ) external onlyOwner {
+    ) external payable {
         (address assetContractAddress, uint256 amount, address recipient, uint256 projectId, uint256 applicationIndex) = 
             abi.decode(encodedVote, (address, uint256, address, uint256, uint256));
  
@@ -28,9 +28,5 @@ contract Donations is Ownable {
         if (!success) {
             revert WithdrawFailed();
         }
-    }
-
-    function getAvailableDonations() public view returns (uint256) {
-        return donationFunds[msg.sender];
     }
 }

@@ -4,6 +4,7 @@ import {BigNumberish, ethers} from "ethers";
 import dotenv from "dotenv";
 
 import spoolABI from "../../contracts/abi/spokePool.json";
+import wrapperABI from "../../contracts/abi/wrapper.json";
 import ACROSS_MOCK_FEE_RESPONSE from "./static/ACCROSS_MOCK_FEE_RESPONSE.json";
 import ACROSS_MOCK_LIMIT_RESPONSE from "./static/ACCROSS_MOCK_LIMIT_RESPONSE.json";
 import SUPPORTED_TOKEN from "./static/token.json";
@@ -22,12 +23,14 @@ type SpoolContract = ethers.Contract & ISpokePool;
 
 let provider: ethers.providers.Web3Provider;
 let signer: ethers.Signer;
-let contractOrigin: SpoolContract;
+let contractOrigin: ethers.Contract;
 let availableRoutes;
 
 const dummyGranteeId = 1;
 const dummyApplicationIndex = 1;
 const dummyRound = "0x0000000000000000000000000000000000000000";
+const donationContractAddressSepolia = "0xfA081C31c2a77c399bdE26b725478191e8e055Ca";
+const donationContractAddressBase = "0xA3230Af30124545E002D260E7Bd4B8e0097948C6";
 
 function generateMessage(
     userAddress: string,
@@ -42,6 +45,22 @@ function generateMessage(
         [userAddress, granteeAddress, granteeId, round, applicationIndex]
     );
 }
+
+function generateMessageTest(
+    userAddress: string,
+    granteeAddress: string,
+    granteeId: number,
+    round: number,
+    applicationIndex: number
+) {
+    const abiCoder = ethers.utils.defaultAbiCoder;
+    return abiCoder.encode(
+        ["address", "uint256", "address", "uint256", "uint256"],
+        [userAddress, granteeId, granteeAddress, round, applicationIndex]
+    );
+}
+
+console.log(generateMessageTest("0x974fDBc4Ff3Ae73Ceeba5B4c85521F2638ee54e5", "0x974fDBc4Ff3Ae73Ceeba5B4c85521F2638ee54e5", 1, 1, 1))
 
 type ApiEndpoints = {
     [key: string]: string;
@@ -144,16 +163,16 @@ document
             console.log(CONTRACTS["11155111"].SpokePool.address);
             try {
                 contractOrigin = new ethers.Contract(
-                    CONTRACTS["11155111"].SpokePool.address,
-                    spoolABI,
+                    donationContractAddressSepolia,
+                    wrapperABI,
                     signer
                 ) as SpoolContract;
                 console.log(
                     "Contract set up on Sepolia: ",
                     await contractOrigin.address
                 );
-                const chainId = await contractOrigin.chainId();
-                console.log("chainId is ", chainId);
+                // const chainId = await contractOrigin.chainId();
+                // console.log("chainId is ", chainId);
             } catch (error) {
                 console.error("Error creating contract:", error);
             }
@@ -245,36 +264,39 @@ async function depositToSpokePool(
         const exclusiveRelayer = "0x0000000000000000000000000000000000000000";
         const fillDeadline = Math.round(Date.now() / 1000) + 21600; // 6 hours from now
         const exclusivityDeadline = 0;
+        const sender = await signer.getAddress();
         const message = generateMessage(
-            await signer.getAddress(),
-            await signer.getAddress(),
+            sender,
+            sender,
             dummyGranteeId,
             dummyRound,
             dummyApplicationIndex
         ); // use sender as dummy grantee address
 
-        const outputAmount = ethers.BigNumber.from(amount).sub(
+        console.log("encoded message:", message)
+
+        const outputAmount = amount.sub(
             ethers.BigNumber.from(totalRelayFee.total)
         );
         console.log(outputAmount);
 
         const args = [
             userAddress,
-            userAddress,
             assetAddress,
             outputToken,
-            amount,
-            outputAmount,
+            amount.toNumber(),
+            outputAmount.toNumber(),
             destinationChainId,
             exclusiveRelayer,
             timestamp,
             fillDeadline,
             exclusivityDeadline,
-            message,
         ];
+
+        console.log("args: ", args)
         
         const depositParams = {
-            recipient: userAddress,
+            recipient: donationContractAddressBase,
             inputToken: assetAddress,
             outputToken: outputToken,
             inputAmount: amount,
@@ -283,13 +305,14 @@ async function depositToSpokePool(
             exclusiveRelayer: exclusiveRelayer,
             quoteTimestamp: timestamp,
             fillDeadline: fillDeadline,
-            exclusivityDeadline: exclusivityDeadline,
-            message: message,
+            exclusivityDeadline: exclusivityDeadline
         };
 
+        console.log("depositparam", depositParams)
+
         const preparedTx = await contractOrigin.populateTransaction[
-            "depositV3"
-        ](...args);
+            "callDepositV3"
+        ](depositParams, message);
 
         console.log("transaction data", {...preparedTx});
 
