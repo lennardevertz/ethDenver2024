@@ -105,7 +105,7 @@ async function getSwapPrice(
     buyToken: string,
     sellAmount: number
 ): Promise<any> {
-    const apiKey = "";
+    const apiKey = "428e703e-d41b-4ef1-b663-323cb386dab2";
     if (!apiKey) {
         throw new Error("API key is not defined in .env file");
     }
@@ -151,7 +151,7 @@ document.getElementById("callBridge")?.addEventListener("click", async () => {
         await window.ethereum.request({method: "eth_requestAccounts"});
 
         // Create a Web3 provider from the window.ethereum object
-        provider = new ethers.providers.Web3Provider(window.ethereum);
+        provider = new ethers.providers.Web3Provider(window.ethereum, "any");
 
         // You now have access to the user's wallet
         signer = await provider.getSigner();
@@ -335,7 +335,7 @@ dropdownButton.onclick = () => {
 
 // Function to update dropdown options
 const updateDropdownOptions = (selectedNetwork: string) => {
-    const allNetworks = ["Ethereum", "Base"]; // Add all possible networks here
+    const allNetworks = ["Ethereum", "Base", "Bitcoin"]; // Add all possible networks here
     const availableNetworks = allNetworks.filter(
         (network) => network !== selectedNetwork
     );
