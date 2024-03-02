@@ -33,3 +33,5 @@ There is a conflict of interest between L2s sponsoring Gitcoin rounds, and donor
 - EAS
   - [Sepolia](https://sepolia.easscan.org/schema/view/0xddb57ed77bc6860ea21047da3e8609c24a43718376587e4bb61d916011d2a6ca)
   - [Base-Sepolia](https://base-sepolia.easscan.org/schema/view/0xae11a756694e3cf5292b4cb1e3f575acf35c1c0ecda04d188f857c2ac940dd2c)
+
+The background image used in the logo was generated with the [Midjourney](https://www.midjourney.com/) text-to-image AI model. Prompt: pastel illustratios of a tent in the mountains --v 5.1</p>
