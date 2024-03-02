@@ -23,7 +23,10 @@ The core feature of Gitcoin is to match donations from individual donors with fu
 - Hardhat
 - Truffle Dashboard
 - Smart Contracts
-  - Donation (Base-Sepolia): 0xfA081C31c2a77c399bdE26b725478191e8e055Ca
-  - Donation (Sepolia): 0x43189a22A2629ff405BDD7688732b20101661848
-  - Wrapper (Base-Sepolia): 0xA3230Af30124545E002D260E7Bd4B8e0097948C6
-  - Wrapper (Sepolia): 0xfA081C31c2a77c399bdE26b725478191e8e055Ca
+  - Donation (Base-Sepolia): [0xfA081C31c2a77c399bdE26b725478191e8e055Ca](https://sepolia.basescan.org/address/0xfA081C31c2a77c399bdE26b725478191e8e055Ca)
+  - Donation (Sepolia): [0x43189a22A2629ff405BDD7688732b20101661848](https://sepolia.etherscan.io/address/0x43189a22A2629ff405BDD7688732b20101661848)
+  - Wrapper (Base-Sepolia): [0xA3230Af30124545E002D260E7Bd4B8e0097948C6](https://sepolia.basescan.org/address/0xA3230Af30124545E002D260E7Bd4B8e0097948C6)
+  - Wrapper (Sepolia): [0xfA081C31c2a77c399bdE26b725478191e8e055Ca](https://sepolia.etherscan.io/address/0xfA081C31c2a77c399bdE26b725478191e8e055Ca)
+- EAS
+  - [Sepolia](https://sepolia.easscan.org/schema/view/0xddb57ed77bc6860ea21047da3e8609c24a43718376587e4bb61d916011d2a6ca)
+  - [Base-Sepolia](https://base-sepolia.easscan.org/schema/view/0xae11a756694e3cf5292b4cb1e3f575acf35c1c0ecda04d188f857c2ac940dd2c)
