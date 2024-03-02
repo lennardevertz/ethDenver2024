@@ -23,7 +23,7 @@ The core feature of Gitcoin is to match donations from individual donors with fu
 - Hardhat
 - Truffle Dashboard
 - Smart Contracts
-  - Donation (Base-Sepolia): 0x9D4440A1c8865c6eD4dD93f3F8646155424154FE
-  - Donation (Sepolia): 0xcbf32F0a9BF93256BAD8cD31cF37a3e914245908
-  - Wrapper (Base-Sepolia): 0x63c461A407FaE2E7F743B9be79A8DdF815D0F487
-  - Wrapper (Sepolia): 0x1Ce21455F1D6776ccD515BCD7D892Bd4cFAdCee4
+  - Donation (Base-Sepolia): 0xfA081C31c2a77c399bdE26b725478191e8e055Ca
+  - Donation (Sepolia): 0x43189a22A2629ff405BDD7688732b20101661848
+  - Wrapper (Base-Sepolia): 0xA3230Af30124545E002D260E7Bd4B8e0097948C6
+  - Wrapper (Sepolia): 0xfA081C31c2a77c399bdE26b725478191e8e055Ca
