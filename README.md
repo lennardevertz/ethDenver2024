@@ -7,6 +7,7 @@
   <p align="center">
 Donate to Gitcoin public goods from any major EVM chain and Bitcoin.
   </p>
+<a href="https://lennardevertz.github.io/ethDenver2024/">Live Version</a>
 </div>
 
 ## Problem
