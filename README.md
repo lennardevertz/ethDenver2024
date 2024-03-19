@@ -33,3 +33,16 @@ There is a conflict of interest between L2s sponsoring Gitcoin rounds, and donor
 - EAS
   - [Sepolia](https://sepolia.easscan.org/schema/view/0xddb57ed77bc6860ea21047da3e8609c24a43718376587e4bb61d916011d2a6ca)
   - [Base-Sepolia](https://base-sepolia.easscan.org/schema/view/0xae11a756694e3cf5292b4cb1e3f575acf35c1c0ecda04d188f857c2ac940dd2c)
+
+
+Needed Urls for AlloV2 integration:
+
+https://github.com/allo-protocol/allo-v2/blob/239e8399a44503f529cadc6ec051febda11c835d/contracts/core/Allo.sol
+
+https://github.com/allo-protocol/allo-v2/blob/239e8399a44503f529cadc6ec051febda11c835d/contracts/strategies/donation-voting-merkle-distribution-direct-transfer/DonationVotingMerkleDistributionDirectTransferStrategy.sol
+
+https://github.com/allo-protocol/allo-v2/blob/239e8399a44503f529cadc6ec051febda11c835d/contracts/strategies/donation-voting-merkle-base/DonationVotingMerkleDistributionBaseStrategy.sol
+
+https://github.com/allo-protocol/allo-v2/blob/239e8399a44503f529cadc6ec051febda11c835d/test/utils/Permit2Mock.sol
+
+https://github.com/allo-protocol/allo-v2/blob/239e8399a44503f529cadc6ec051febda11c835d/test/foundry/strategies/DonationVotingMerkleDistributionBase.t.sol#L983
