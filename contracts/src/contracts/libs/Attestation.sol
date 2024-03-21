@@ -32,7 +32,7 @@ contract PublicGoodAttester {
     function _attestDonor(
         address _donor,
         address _grantee,
-        uint256 _granteeId,
+        address _recipientId,
         address _round,
         address _tokenSent,
         uint256 _amount
@@ -48,7 +48,7 @@ contract PublicGoodAttester {
                     data: abi.encode(
                         _donor,
                         _grantee,
-                        _granteeId,
+                        _recipientId,
                         _round,
                         _tokenSent,
                         _amount

@@ -4,17 +4,20 @@ pragma solidity 0.8.19;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {PublicGoodAttester} from "./libs/Attestation.sol";
+
+import {Native} from "./libs/Native.sol";
+
 import {IDonations} from "./interfaces/IDonations.sol";
 import {IAllo} from "./interfaces/IAllo.sol";
 import {V3SpokePoolInterface} from "./interfaces/ISpokePool.sol";
 import {WETH9Interface} from "./interfaces/IWETH.sol";
 
-contract DonationWrapper is Ownable, PublicGoodAttester {
+contract DonationWrapper is Ownable, Native, PublicGoodAttester {
     error Unauthorized();
 
     address public SPOKE_POOL;
     address public DONATION_ADDRESS;
-    address public ALLO;
+    address public ALLO_ADDRESS;
     address public WETH_ADDRESS;
     V3SpokePoolInterface spokePool;
     IDonations donationsContract;
@@ -64,7 +67,7 @@ contract DonationWrapper is Ownable, PublicGoodAttester {
         ALLO_ADDRESS = _allo;
         spokePool = V3SpokePoolInterface(SPOKE_POOL);
         donationsContract = IDonations(DONATION_ADDRESS);
-        alloContract = IALLO(ALLO_ADDRESS);
+        alloContract = IAllo(ALLO_ADDRESS);
         wethContract = WETH9Interface(WETH_ADDRESS);
     }
 
@@ -83,23 +86,15 @@ contract DonationWrapper is Ownable, PublicGoodAttester {
         (
             address donor,
             address grantee,
-            uint256 granteeId,
+            address recipientId,
             address round,
             uint256 applicationIndex,
             uint256 poolId
-        ) = abi.decode(message, (address, address, uint256, address, uint256, uint256));
+        ) = abi.decode(message, (address, address, address, address, uint256, uint256));
 
-        _attestDonor(donor, grantee, granteeId, round, tokenSent, amount);
-
-        bytes memory encodedVote = abi.encode(
-            tokenSent,
-            amount,
-            grantee,
-            granteeId,
-            applicationIndex
-        );
-
-// figure out ISignatureTransfer and deadline -> not needed as `token: NATIVE`? Same with `nonce`?
+        _attestDonor(donor, grantee, recipientId, round, tokenSent, amount);
+        
+        // figure out ISignatureTransfer and deadline -> not needed as `token: NATIVE`? Same with `nonce`?
         Permit2Data memory permit2Data =
         Permit2Data({
             permit: PermitTransferFrom({
@@ -115,9 +110,9 @@ contract DonationWrapper is Ownable, PublicGoodAttester {
 
 // DonationVotingMerkleDistributionBaseStrategy.PermitType.None == 0 ?
 // granteeId == recipientId address?
-    function _vote(uint256 poolId, address recipientId, Permit2Data permit2Data) internal {
+    function _vote(uint256 poolId, address recipientId, Permit2Data memory permit2Data) internal {
         alloContract.allocate{value: permit2Data.permit.permitted.amount}(
-            poolId, abi.encode(granteeId, 0, permit2Data)
+            poolId, abi.encode(recipientId, 0, permit2Data)
         );
     }
 
