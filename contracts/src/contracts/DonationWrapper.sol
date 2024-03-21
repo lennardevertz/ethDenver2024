@@ -9,6 +9,7 @@ import {Native} from "./libs/Native.sol";
 
 import {IDonations} from "./interfaces/IDonations.sol";
 import {IAllo} from "./interfaces/IAllo.sol";
+import {ISignatureTransfer} from "./interfaces/ISignatureTransfer.sol";
 import {V3SpokePoolInterface} from "./interfaces/ISpokePool.sol";
 import {WETH9Interface} from "./interfaces/IWETH.sol";
 
@@ -24,6 +25,8 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
     IAllo alloContract;
     WETH9Interface wethContract;
 
+    ISignatureTransfer public permit2;
+
     struct DepositParams {
         address recipient;
         address inputToken;
@@ -37,19 +40,8 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
         uint32 exclusivityDeadline;
     }
 
-    struct TokenPermissions {
-        address token;
-        uint256 amount;
-    }
-
-    struct PermitTransferFrom{
-        TokenPermissions permitted;
-        uint256 nonce;
-        uint256 deadline;
-    }
-
     struct Permit2Data {
-        PermitTransferFrom permit;
+        ISignatureTransfer.PermitTransferFrom permit;
         bytes signature;
     }
 
@@ -97,8 +89,8 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
         // figure out ISignatureTransfer and deadline -> not needed as `token: NATIVE`? Same with `nonce`?
         Permit2Data memory permit2Data =
         Permit2Data({
-            permit: PermitTransferFrom({
-                permitted: TokenPermissions({token: NATIVE, amount: amount}),
+            permit: ISignatureTransfer.PermitTransferFrom({
+                permitted: ISignatureTransfer.TokenPermissions({token: NATIVE, amount: amount}),
                 nonce: 0,
                 deadline: 0
             }),
@@ -108,8 +100,8 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
         _vote(poolId, recipientId, permit2Data);
     }
 
-// DonationVotingMerkleDistributionBaseStrategy.PermitType.None == 0 ?
-// granteeId == recipientId address?
+// DonationVotingMerkleDistributionBaseStrategy.PermitType.None == 0
+// recipientId address?
     function _vote(uint256 poolId, address recipientId, Permit2Data memory permit2Data) internal {
         alloContract.allocate{value: permit2Data.permit.permitted.amount}(
             poolId, abi.encode(recipientId, 0, permit2Data)
