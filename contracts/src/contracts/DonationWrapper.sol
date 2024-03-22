@@ -15,6 +15,7 @@ import {WETH9Interface} from "./interfaces/IWETH.sol";
 
 contract DonationWrapper is Ownable, Native, PublicGoodAttester {
     error Unauthorized();
+    error MissingData();
 
     address public SPOKE_POOL;
     address public DONATION_ADDRESS;
@@ -79,12 +80,11 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
             address donor,
             address grantee,
             address recipientId,
-            address round,
-            uint256 applicationIndex,
-            uint256 poolId
-        ) = abi.decode(message, (address, address, address, address, uint256, uint256));
+            uint256 roundId
+        ) = abi.decode(message, (address, address, address, uint256));
 
-        _attestDonor(donor, grantee, recipientId, round, tokenSent, amount);
+        // setup new schema
+        _attestDonor(donor, grantee, recipientId, roundId, tokenSent, amount, relayer);
         
         // figure out ISignatureTransfer and deadline -> not needed as `token: NATIVE`? Same with `nonce`?
         Permit2Data memory permit2Data =
@@ -97,14 +97,14 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
             signature: ""
         });
 
-        _vote(poolId, recipientId, permit2Data);
+        _vote(roundId, recipientId, permit2Data);
     }
 
-// DonationVotingMerkleDistributionBaseStrategy.PermitType.None == 0
+// DonationVotingMerkleDistributionBaseStrategy.PermitType.None == 0 (enum)
 // recipientId address?
-    function _vote(uint256 poolId, address recipientId, Permit2Data memory permit2Data) internal {
+    function _vote(uint256 roundId, address recipientId, Permit2Data memory permit2Data) internal {
         alloContract.allocate{value: permit2Data.permit.permitted.amount}(
-            poolId, abi.encode(recipientId, 0, permit2Data)
+            roundId, abi.encode(recipientId, 0, permit2Data)
         );
     }
 
@@ -113,12 +113,18 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
         DepositParams memory params,
         bytes memory message
     ) external payable {
-        (address donor, , , , ) = abi.decode(
+
+        (address donor, address grantee, address recipientId,) = abi.decode(
             message,
-            (address, address, uint256, address, uint256)
+            (address, address, address, uint256)
         );
 
         if (msg.sender != donor) revert Unauthorized();
+
+        if (grantee == address(0) || recipientId == address(0)) {
+            revert MissingData();
+        }
+
 
         spokePool.depositV3{value: msg.value}(
             msg.sender, // donor

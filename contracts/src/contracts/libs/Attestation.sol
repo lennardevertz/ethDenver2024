@@ -33,9 +33,10 @@ contract PublicGoodAttester {
         address _donor,
         address _grantee,
         address _recipientId,
-        address _round,
+        uint256 _round,
         address _tokenSent,
-        uint256 _amount
+        uint256 _amount,
+        address _relayer
     ) internal {
         EAS.attest(
             AttestationRequest({
@@ -51,7 +52,8 @@ contract PublicGoodAttester {
                         _recipientId,
                         _round,
                         _tokenSent,
-                        _amount
+                        _amount,
+                        _relayer
                     ),
                     value: 0 
                 })
