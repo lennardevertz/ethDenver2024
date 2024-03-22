@@ -114,17 +114,12 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
         bytes memory message
     ) external payable {
 
-        (address donor, address grantee, address recipientId,) = abi.decode(
+        (address donor,,,) = abi.decode(
             message,
             (address, address, address, uint256)
         );
 
         if (msg.sender != donor) revert Unauthorized();
-
-        if (grantee == address(0) || recipientId == address(0)) {
-            revert MissingData();
-        }
-
 
         spokePool.depositV3{value: msg.value}(
             msg.sender, // donor
