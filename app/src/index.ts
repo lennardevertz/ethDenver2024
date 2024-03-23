@@ -1,15 +1,10 @@
 console.log("Hello Cross-chain Gitcoin donations!");
 // Ethers V5
-import {BigNumberish, ethers} from "ethers";
+import {ethers} from "ethers";
 import dotenv from "dotenv";
 
-import spoolABI from "../../contracts/abi/spokePool.json";
 import wrapperABI from "../../contracts/abi/wrapper.json";
-import ACROSS_MOCK_FEE_RESPONSE from "./static/ACCROSS_MOCK_FEE_RESPONSE.json";
-import ACROSS_MOCK_LIMIT_RESPONSE from "./static/ACCROSS_MOCK_LIMIT_RESPONSE.json";
 import SUPPORTED_TOKEN from "./static/token.json";
-import CONTRACTS from "./static/ACROSS_CONTRACTS.json";
-import {ISpokePool} from "./static/spool";
 
 declare global {
     interface Window {
