@@ -103,7 +103,7 @@ async function getSwapPrice(
     buyToken: string,
     sellAmount: number
 ): Promise<any> {
-    const apiKey = "";
+    const apiKey = "428e703e-d41b-4ef1-b663-323cb386dab2";
     if (!apiKey) {
         throw new Error("API key is not defined in .env file");
     }
