@@ -18,11 +18,9 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
     error MissingData();
 
     address public SPOKE_POOL;
-    address public DONATION_ADDRESS;
     address public ALLO_ADDRESS;
     address public WETH_ADDRESS;
     V3SpokePoolInterface spokePool;
-    IDonations donationsContract;
     IAllo alloContract;
     WETH9Interface wethContract;
 
@@ -50,16 +48,13 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
         address _eas,
         bytes32 _easSchema,
         address _acrossSpokePool,
-        address _donationsContractAddress,
         address _allo,
         address _wethAddress
     ) PublicGoodAttester(_eas, _easSchema) {
         SPOKE_POOL = _acrossSpokePool;
-        DONATION_ADDRESS = _donationsContractAddress;
         WETH_ADDRESS = _wethAddress;
         ALLO_ADDRESS = _allo;
         spokePool = V3SpokePoolInterface(SPOKE_POOL);
-        donationsContract = IDonations(DONATION_ADDRESS);
         alloContract = IAllo(ALLO_ADDRESS);
         wethContract = WETH9Interface(WETH_ADDRESS);
     }
@@ -86,7 +81,6 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
         // setup new schema
         _attestDonor(donor, grantee, recipientId, roundId, tokenSent, amount, relayer);
         
-        // figure out ISignatureTransfer and deadline -> not needed as `token: NATIVE`? Same with `nonce`?
         Permit2Data memory permit2Data =
         Permit2Data({
             permit: ISignatureTransfer.PermitTransferFrom({
@@ -100,8 +94,6 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
         _vote(roundId, recipientId, permit2Data);
     }
 
-// DonationVotingMerkleDistributionBaseStrategy.PermitType.None == 0 (enum)
-// recipientId address?
     function _vote(uint256 roundId, address recipientId, Permit2Data memory permit2Data) internal {
         alloContract.allocate{value: permit2Data.permit.permitted.amount}(
             roundId, abi.encode(recipientId, 0, permit2Data)
