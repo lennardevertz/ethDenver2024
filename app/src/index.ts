@@ -33,6 +33,10 @@ const donationContractAddressSepolia =
     "0xfA081C31c2a77c399bdE26b725478191e8e055Ca";
 const donationContractAddressBase =
     "0xA3230Af30124545E002D260E7Bd4B8e0097948C6";
+const GRANTEE_CREATOR = "0x3f15B8c6F9939879Cb030D6dd935348E57109637"
+const ROUND_ID = 92;
+const RECIPIENT_ID = "0xF285db482fE8F1D779477C8DA2674B77925E56E3"
+
 
 let selectedNetwork: string = "Ethereum";
 let selectedAmount = 15;
@@ -46,16 +50,15 @@ const contracts = {
 };
 
 function generateMessage(
-    userAddress: string,
+    senderAddress: string,
     granteeAddress: string,
-    granteeId: number,
-    round: string,
-    applicationIndex: number
+    recipientId: string,
+    roundId: number
 ) {
     const abiCoder = ethers.utils.defaultAbiCoder;
     return abiCoder.encode(
-        ["address", "address", "uint256", "address", "uint256"],
-        [userAddress, granteeAddress, granteeId, round, applicationIndex]
+        ["address", "address", "address", "uint256"],
+        [senderAddress, granteeAddress, recipientId, roundId]
     );
 }
 
@@ -244,11 +247,10 @@ async function depositToSpokePool(
         const sender = await signer.getAddress();
         const message = generateMessage(
             sender,
-            sender,
-            dummyGranteeId,
-            dummyRound,
-            dummyApplicationIndex
-        ); // use sender as dummy grantee address
+            GRANTEE_CREATOR,
+            RECIPIENT_ID,
+            ROUND_ID
+        ); // use dummy data from indexer, works only on path base -> sepolia
 
         console.log("encoded message:", message);
 
