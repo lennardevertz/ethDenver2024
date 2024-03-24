@@ -17,12 +17,16 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
     error Unauthorized();
     error MissingData();
 
+    event Logger(bytes);
+
     address public SPOKE_POOL;
     address public ALLO_ADDRESS;
     address public WETH_ADDRESS;
     V3SpokePoolInterface spokePool;
     IAllo alloContract;
     WETH9Interface wethContract;
+
+    uint256 testOffset;
 
     ISignatureTransfer public permit2;
 
@@ -37,6 +41,13 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
         uint32 quoteTimestamp;
         uint32 fillDeadline;
         uint32 exclusivityDeadline;
+    }
+
+    enum PermitType {
+        None,
+        Permit,
+        PermitDAI,
+        Permit2
     }
 
     struct Permit2Data {
@@ -57,6 +68,7 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
         spokePool = V3SpokePoolInterface(SPOKE_POOL);
         alloContract = IAllo(ALLO_ADDRESS);
         wethContract = WETH9Interface(WETH_ADDRESS);
+        testOffset = 301;
     }
 
     function handleV3AcrossMessage(
@@ -86,7 +98,7 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
             permit: ISignatureTransfer.PermitTransferFrom({
                 permitted: ISignatureTransfer.TokenPermissions({token: NATIVE, amount: amount}),
                 nonce: 0,
-                deadline: 0
+                deadline: testOffset + 10000
             }),
             signature: ""
         });
@@ -96,7 +108,7 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
 
     function _vote(uint256 roundId, address recipientId, Permit2Data memory permit2Data) internal {
         alloContract.allocate{value: permit2Data.permit.permitted.amount}(
-            roundId, abi.encode(recipientId, 0, permit2Data)
+            roundId, abi.encode(recipientId, PermitType.None, permit2Data)
         );
     }
 
@@ -106,27 +118,38 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
         bytes memory message
     ) external payable {
 
-        (address donor,,,) = abi.decode(
+        (address donor,,address recipientId,) = abi.decode(
             message,
             (address, address, address, uint256)
         );
 
         if (msg.sender != donor) revert Unauthorized();
 
-        spokePool.depositV3{value: msg.value}(
-            msg.sender, // donor
-            params.recipient,
-            params.inputToken,
-            params.outputToken,
-            params.inputAmount,
-            params.outputAmount,
-            params.destinationChainId,
-            params.exclusiveRelayer,
-            params.quoteTimestamp,
-            params.fillDeadline,
-            params.exclusivityDeadline,
-            message
-        );
+        // spokePool.depositV3{value: msg.value}(
+        //     msg.sender, // donor
+        //     params.recipient,
+        //     params.inputToken,
+        //     params.outputToken,
+        //     params.inputAmount,
+        //     params.outputAmount,
+        //     params.destinationChainId,
+        //     params.exclusiveRelayer,
+        //     params.quoteTimestamp,
+        //     params.fillDeadline,
+        //     params.exclusivityDeadline,
+        //     message
+        // );
+
+        Permit2Data memory permit2Data =
+        Permit2Data({
+            permit: ISignatureTransfer.PermitTransferFrom({
+                permitted: ISignatureTransfer.TokenPermissions({token: NATIVE, amount: 1000000000000000}),
+                nonce: 0,
+                deadline: testOffset + 10000
+            }),
+            signature: ""
+        });
+        emit Logger(abi.encode(recipientId, PermitType.None, permit2Data));
     }
 
     function unwrapWETH(uint256 _amount) public {
