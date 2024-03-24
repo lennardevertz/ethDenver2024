@@ -57,6 +57,39 @@ function generateMessage(
     );
 }
 
+function generateVote(){
+    const recipientId = '0xf285db482fe8f1d779477c8da2674b77925e56e3'; // replace with the actual recipientId
+    const PermitTypeNone = 0; // Assuming None is the first in the enum and so is 0
+    const NATIVE = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'; // replace with the actual address for NATIVE
+    const amount = '1000000000000000';
+    const nonce = 0;
+    const deadline = 0; // replace testOffset with its value
+    const signature = '0x0000000000000000000000000000000000000000000000000000000000000000';
+    const types = [
+        "address",   
+        "uint8",
+        "tuple(tuple(tuple(address, uint256), uint256, uint256), bytes)"
+    ];
+    let data = [
+        recipientId,            // Replace with actual recipientId value
+        PermitTypeNone,                      // PermitType.None as 0 (if it's the first enum value)
+        [  // Permit2Data
+            [  // ISignatureTransfer.PermitTransferFrom
+                [  // ISignatureTransfer.TokenPermissions
+                    NATIVE,         // Replace with actual token address for NATIVE
+                    amount // Amount
+                ],
+                nonce,               // Nonce
+                deadline  // Deadline
+            ],
+            signature               // Signature as an empty byte string
+        ]
+    ];
+    const abiCoder = ethers.utils.defaultAbiCoder;
+    return abiCoder.encode(types, data)
+}
+console.log(generateVote())
+
 type ApiEndpoints = {
     [key: string]: string;
 };
