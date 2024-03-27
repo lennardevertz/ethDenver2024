@@ -2,6 +2,8 @@
 pragma solidity 0.8.19;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
 
 import {PublicGoodAttester} from "./libs/Attestation.sol";
 
@@ -13,9 +15,9 @@ import {ISignatureTransfer} from "./interfaces/ISignatureTransfer.sol";
 import {V3SpokePoolInterface} from "./interfaces/ISpokePool.sol";
 import {WETH9Interface} from "./interfaces/IWETH.sol";
 
-contract DonationWrapper is Ownable, Native, PublicGoodAttester {
+contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester {
     error Unauthorized();
-    error MissingData();
+    error InsufficientFunds();
 
     event Logger(bytes);
 
@@ -25,8 +27,6 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
     V3SpokePoolInterface spokePool;
     IAllo alloContract;
     WETH9Interface wethContract;
-
-    uint256 testOffset;
 
     ISignatureTransfer public permit2;
 
@@ -68,7 +68,6 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
         spokePool = V3SpokePoolInterface(SPOKE_POOL);
         alloContract = IAllo(ALLO_ADDRESS);
         wethContract = WETH9Interface(WETH_ADDRESS);
-        testOffset = 301;
     }
 
     function handleV3AcrossMessage(
@@ -76,84 +75,156 @@ contract DonationWrapper is Ownable, Native, PublicGoodAttester {
         uint256 amount,
         address relayer,
         bytes memory message
-    ) external payable {
-
+    ) external payable nonReentrant {
         if (msg.sender != SPOKE_POOL) revert Unauthorized();
 
-        // Only support WETH transfers for now. This can be switched to a swap() call in the future to allow for wider token support.
-        unwrapWETH(amount);
+        (bytes memory donationData, bytes memory signature) = abi.decode(message, (bytes, bytes));
 
-        (
-            address donor,
-            address grantee,
-            address recipientId,
-            uint256 roundId
-        ) = abi.decode(message, (address, address, address, uint256));
+        if (!verifyDonation(donationData, signature)) revert Unauthorized();
 
-        // setup new schema
-        _attestDonor(donor, grantee, recipientId, roundId, tokenSent, amount, relayer);
-        
-        Permit2Data memory permit2Data =
-        Permit2Data({
-            permit: ISignatureTransfer.PermitTransferFrom({
-                permitted: ISignatureTransfer.TokenPermissions({token: NATIVE, amount: amount}),
-                nonce: 0,
-                deadline: testOffset + 10000
-            }),
-            signature: ""
-        });
-
-        _vote(roundId, recipientId, permit2Data);
+        handleDonation(donationData, amount, tokenSent, relayer);
     }
-
-    function _vote(uint256 roundId, address recipientId, Permit2Data memory permit2Data) internal {
-        alloContract.allocate{value: permit2Data.permit.permitted.amount}(
-            roundId, abi.encode(recipientId, PermitType.None, permit2Data)
-        );
-    }
-
 
     function callDepositV3(
         DepositParams memory params,
         bytes memory message
-    ) external payable {
+    ) external payable nonReentrant {
 
-        (address donor,,address recipientId,) = abi.decode(
-            message,
-            (address, address, address, uint256)
+        (bytes memory donationData, bytes memory signature) = abi.decode(message, (bytes, bytes));
+
+        (,,address donor,) = abi.decode(
+            donationData,
+            (uint256, address, address, bytes) // roundId, grantee, donor, voteParams(encoded)
         );
 
-        if (msg.sender != donor) revert Unauthorized();
+        // Verifying donationData
+        if (!verifyDonation(donationData, signature) || msg.sender != donor) revert Unauthorized();
 
-        // spokePool.depositV3{value: msg.value}(
-        //     msg.sender, // donor
-        //     params.recipient,
-        //     params.inputToken,
-        //     params.outputToken,
-        //     params.inputAmount,
-        //     params.outputAmount,
-        //     params.destinationChainId,
-        //     params.exclusiveRelayer,
-        //     params.quoteTimestamp,
-        //     params.fillDeadline,
-        //     params.exclusivityDeadline,
-        //     message
+        makeDeposit(params, message);
+    }
+
+    function handleDonation(bytes memory donationData, uint256 amount, address tokenSent, address relayer) internal {
+
+        // Permit2Data memory permit2Data =
+        // Permit2Data({
+        //     permit: ISignatureTransfer.PermitTransferFrom({
+        //         permitted: ISignatureTransfer.TokenPermissions({token: NATIVE, amount: amount}),
+        //         nonce: 0,
+        //         deadline: testOffset + 10000
+        //     }),
+        //     signature: ""
+        // });
+
+        // _vote(roundId, recipientId, permit2Data);
+
+
+        (uint256 roundId, address grantee, address donor, bytes memory voteData) = abi.decode(
+            donationData,
+            (uint256, address, address, bytes) // roundId, grantee, donor, voteParams(encoded)
+        );
+
+        (address recipientId,, Permit2Data memory permit2Data) = abi.decode(voteData, (address, PermitType, Permit2Data));
+
+        if (amount < permit2Data.permit.permitted.amount) revert InsufficientFunds();
+
+        // Only support WETH transfers for now. This can be switched to a swap() call in the future to allow for wider token support.
+        unwrapWETH(amount);
+
+        // setup new schema
+        _attestDonor(donor, grantee, recipientId, roundId, tokenSent, amount, relayer);        
+        
+        _vote(roundId, voteData, amount);
+    }
+
+    function _vote(uint256 _roundId, bytes memory _voteData, uint256 _amount) internal {
+        alloContract.allocate{value: _amount}(
+            _roundId, _voteData
+        );
+        // alloContract.allocate{value: permit2Data.permit.permitted.amount}(
+        //     roundId, abi.encode(recipientId, PermitType.None, permit2Data)
         // );
+    }
 
-        Permit2Data memory permit2Data =
-        Permit2Data({
-            permit: ISignatureTransfer.PermitTransferFrom({
-                permitted: ISignatureTransfer.TokenPermissions({token: NATIVE, amount: 1000000000000000}),
-                nonce: 0,
-                deadline: testOffset + 10000
-            }),
-            signature: ""
-        });
-        emit Logger(abi.encode(recipientId, PermitType.None, permit2Data));
+     function makeDeposit(DepositParams memory params, bytes memory message) internal {
+        // make sure that params.outputAmount >= amount in voteParams
+        spokePool.depositV3{value: msg.value}(
+            msg.sender, // donor
+            params.recipient,
+            params.inputToken,
+            params.outputToken,
+            params.inputAmount,
+            params.outputAmount,
+            params.destinationChainId,
+            params.exclusiveRelayer,
+            params.quoteTimestamp,
+            params.fillDeadline,
+            params.exclusivityDeadline,
+            message
+        );
     }
 
     function unwrapWETH(uint256 _amount) public {
         wethContract.withdraw(_amount);
+    }
+
+    // Verifying Signatures
+    function verifyDonation(bytes memory donationData, bytes memory signature) internal pure returns (bool) {
+        (,,address donor,) = abi.decode(
+            donationData,
+            (uint256, address, address, bytes) // roundId, grantee, donor, voteParams(encoded)
+        );
+
+        return verify(donor, donationData, signature);
+    }
+
+    function getMessageHash(
+        bytes memory _message
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(_message));
+    }
+
+    function getEthSignedMessageHash(bytes32 _messageHash)
+        public
+        pure
+        returns (bytes32)
+    {
+        return keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageHash)
+        );
+    }
+
+    function verify(
+        address _signer,
+        bytes memory _message,
+        bytes memory _signature
+    ) public pure returns (bool) {
+        bytes32 messageHash = getMessageHash(_message);
+        bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
+
+        return recoverSigner(ethSignedMessageHash, _signature) == _signer;
+    }
+
+    function recoverSigner(
+        bytes32 _ethSignedMessageHash,
+        bytes memory _signature
+    ) public pure returns (address) {
+        (bytes32 r, bytes32 s, uint8 v) = splitSignature(_signature);
+
+        return ecrecover(_ethSignedMessageHash, v, r, s);
+    }
+
+     function splitSignature(bytes memory sig)
+        public
+        pure
+        returns (bytes32 r, bytes32 s, uint8 v)
+    {
+        require(sig.length == 65, "invalid signature length");
+
+        assembly {
+            r := mload(add(sig, 32))
+            s := mload(add(sig, 64))
+            v := byte(0, mload(add(sig, 96)))
+        }
     }
 
     receive() external payable {}
