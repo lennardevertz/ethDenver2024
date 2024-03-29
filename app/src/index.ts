@@ -77,6 +77,14 @@ function generateDonationData(
     );
 }
 
+function generateCombinedMessage(message: string, signature: string) {
+    const abiCoder = ethers.utils.defaultAbiCoder;
+    return abiCoder.encode(
+        ["bytes", "bytes"],
+        [message, signature]
+    );
+}
+
 function generateVote(
     recipientId: string,
     amount: number,
@@ -291,8 +299,10 @@ async function depositToSpokePool(
 
         // use dummy data from indexer, works only on path base -> sepolia
         const data = await generateDataAndSignature();
+        const messageCombined = generateCombinedMessage(data.encodedMessage, data.signature);
 
-        console.log(await contractOrigin.verify(data.encodedMessage, data.signature))
+        console.log(await contractOrigin.verify(await signer.getAddress(), data.encodedMessage, data.signature))
+        console.log(await contractOrigin.verifyDonation(data.encodedMessage, data.signature))
 
         const outputToken = "0x0000000000000000000000000000000000000000";
         const exclusiveRelayer = "0x0000000000000000000000000000000000000000";

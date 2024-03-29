@@ -177,6 +177,18 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
         return verify(donor, donationData, signature);
     }
 
+        // Verifying Signatures
+    function verifyDonation2(bytes memory message) internal pure returns (bool) {
+        (bytes memory donationData, bytes memory signature) = abi.decode(message, (bytes, bytes));
+
+        (,,address donor,) = abi.decode(
+            donationData,
+            (uint256, address, address, bytes) // roundId, grantee, donor, voteParams(encoded)
+        );
+
+        return verify(donor, donationData, signature);
+    }
+
     function getMessageHash(
         bytes memory _message
     ) public pure returns (bytes32) {
