@@ -1,6 +1,6 @@
 console.log("Hello Cross-chain Gitcoin donations!");
 // Ethers V5
-import {ethers} from "ethers";
+import {Bytes, ethers} from "ethers";
 import dotenv from "dotenv";
 
 import wrapperABI from "../../contracts/abi/wrapper.json";
@@ -25,9 +25,8 @@ const dummyGranteeId = 1;
 const dummyApplicationIndex = 1;
 const dummyRound = "0x0000000000000000000000000000000000000000";
 const donationContractAddressSepolia =
-    "0xF473b415aB4604b52Fbdaefc75fD2154A017C6dF";
-const donationContractAddressBase =
-    "0xbDdDdd0d36dc39CC11C7f134C30F015D25F3C489";
+    "0xf473b415ab4604b52fbdaefc75fd2154a017c6df";
+const donationContractAddressBase ='0xfbc2719595bb1225e838cb42f3f2eb78937d58eb';
 const GRANTEE_CREATOR = "0x3f15B8c6F9939879Cb030D6dd935348E57109637"
 const ROUND_ID = 92;
 const RECIPIENT_ID = "0xF285db482fE8F1D779477C8DA2674B77925E56E3"
@@ -44,26 +43,48 @@ const contracts = {
     "84532": donationContractAddressBase,
 };
 
-function generateMessage(
-    senderAddress: string,
+async function generateDataAndSignature(
+) {
+    const recipientId='0xf285db482fe8f1d779477c8da2674b77925e56e3'
+    const amount = 1000000000000000
+
+    const voteParam = generateVote(recipientId, amount);
+    console.log("voteParam: ", voteParam)
+
+    const encodedMessage = generateDonationData(ROUND_ID, GRANTEE_CREATOR, await signer.getAddress(), voteParam)
+    console.log(await contractOrigin.address)
+
+    // const hashedEncoding = "0x5d4c17dad23576e1b624fd55b927691ecaa8b93ad820d89de42542f07ebb70eb";
+    const hashedEncoding = await contractOrigin.getMessageHash(encodedMessage);
+    console.log("Hashed message: ", hashedEncoding)
+
+    const signature = await signer.signMessage(ethers.utils.arrayify(hashedEncoding));
+    console.log("Signed message: ", signature)
+
+    return {encodedMessage, signature}
+}
+
+function generateDonationData(
+    roundId: number,
     granteeAddress: string,
-    recipientId: string,
-    roundId: number
+    senderAddress: string,
+    voteParams: string
 ) {
     const abiCoder = ethers.utils.defaultAbiCoder;
     return abiCoder.encode(
-        ["address", "address", "address", "uint256"],
-        [senderAddress, granteeAddress, recipientId, roundId]
+        ["uint256", "address", "address", "bytes"],
+        [roundId, granteeAddress, senderAddress, voteParams]
     );
 }
 
-function generateVote(){
-    const recipientId = '0xf285db482fe8f1d779477c8da2674b77925e56e3'; // replace with the actual recipientId
+function generateVote(
+    recipientId: string,
+    amount: number,
+){
     const PermitTypeNone = 0; // Assuming None is the first in the enum and so is 0
     const NATIVE = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'; // replace with the actual address for NATIVE
-    const amount = '1000000000000000';
     const nonce = 0;
-    const deadline = 0; // replace testOffset with its value
+    const deadline = 0; 
     const signature = '0x0000000000000000000000000000000000000000000000000000000000000000';
     const types = [
         "address",   
@@ -79,7 +100,7 @@ function generateVote(){
                     NATIVE,         // Replace with actual token address for NATIVE
                     amount // Amount
                 ],
-                nonce,               // Nonce
+                nonce,    // Nonce
                 deadline  // Deadline
             ],
             signature               // Signature as an empty byte string
@@ -88,7 +109,6 @@ function generateVote(){
     const abiCoder = ethers.utils.defaultAbiCoder;
     return abiCoder.encode(types, data)
 }
-console.log(generateVote())
 
 type ApiEndpoints = {
     [key: string]: string;
@@ -268,19 +288,16 @@ async function depositToSpokePool(
     timestamp: number
 ) {
     try {
+
+        // use dummy data from indexer, works only on path base -> sepolia
+        const data = await generateDataAndSignature();
+
+        console.log(await contractOrigin.verify(data.encodedMessage, data.signature))
+
         const outputToken = "0x0000000000000000000000000000000000000000";
         const exclusiveRelayer = "0x0000000000000000000000000000000000000000";
         const fillDeadline = Math.round(Date.now() / 1000) + 21600; // 6 hours from now
         const exclusivityDeadline = 0;
-        const sender = await signer.getAddress();
-        const message = generateMessage(
-            sender,
-            GRANTEE_CREATOR,
-            RECIPIENT_ID,
-            ROUND_ID
-        ); // use dummy data from indexer, works only on path base -> sepolia
-
-        console.log("encoded message:", message);
 
         console.log("amount", amount);
         console.log("totalRelayFee.total", totalRelayFee.total);
@@ -307,7 +324,7 @@ async function depositToSpokePool(
 
         const preparedTx = await contractOrigin.populateTransaction[
             "callDepositV3"
-        ](depositParams, message);
+        ](depositParams, data.encodedMessage);
 
         console.log("transaction data", {...preparedTx});
 
