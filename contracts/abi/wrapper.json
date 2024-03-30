@@ -32,12 +32,12 @@
   },
   {
     "inputs": [],
-    "name": "InvalidEAS",
+    "name": "InsufficientFunds",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "MissingData",
+    "name": "InvalidEAS",
     "type": "error"
   },
   {
@@ -234,24 +234,9 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
+        "internalType": "bytes",
         "name": "_message",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_nonce",
-        "type": "uint256"
+        "type": "bytes"
       }
     ],
     "name": "getMessageHash",
@@ -382,268 +367,6 @@
   {
     "inputs": [
       {
-        "internalType": "bytes",
-        "name": "_data",
-        "type": "bytes"
-      }
-    ],
-    "name": "testDecode",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "enum DonationWrapper.PermitType",
-        "name": "",
-        "type": "uint8"
-      },
-      {
-        "components": [
-          {
-            "components": [
-              {
-                "components": [
-                  {
-                    "internalType": "address",
-                    "name": "token",
-                    "type": "address"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "amount",
-                    "type": "uint256"
-                  }
-                ],
-                "internalType": "struct ISignatureTransfer.TokenPermissions",
-                "name": "permitted",
-                "type": "tuple"
-              },
-              {
-                "internalType": "uint256",
-                "name": "nonce",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "deadline",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct ISignatureTransfer.PermitTransferFrom",
-            "name": "permit",
-            "type": "tuple"
-          },
-          {
-            "internalType": "bytes",
-            "name": "signature",
-            "type": "bytes"
-          }
-        ],
-        "internalType": "struct DonationWrapper.Permit2Data",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes",
-        "name": "_data",
-        "type": "bytes"
-      }
-    ],
-    "name": "testDecodeMessage",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "addr_",
-        "type": "address"
-      }
-    ],
-    "name": "testEncode",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "enum DonationWrapper.PermitType",
-        "name": "pt",
-        "type": "uint8"
-      }
-    ],
-    "name": "testEncode2",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "components": [
-              {
-                "components": [
-                  {
-                    "internalType": "address",
-                    "name": "token",
-                    "type": "address"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "amount",
-                    "type": "uint256"
-                  }
-                ],
-                "internalType": "struct ISignatureTransfer.TokenPermissions",
-                "name": "permitted",
-                "type": "tuple"
-              },
-              {
-                "internalType": "uint256",
-                "name": "nonce",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "deadline",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct ISignatureTransfer.PermitTransferFrom",
-            "name": "permit",
-            "type": "tuple"
-          },
-          {
-            "internalType": "bytes",
-            "name": "signature",
-            "type": "bytes"
-          }
-        ],
-        "internalType": "struct DonationWrapper.Permit2Data",
-        "name": "p2d",
-        "type": "tuple"
-      }
-    ],
-    "name": "testEncode3",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "recipientId",
-        "type": "address"
-      },
-      {
-        "internalType": "enum DonationWrapper.PermitType",
-        "name": "pt",
-        "type": "uint8"
-      },
-      {
-        "components": [
-          {
-            "components": [
-              {
-                "components": [
-                  {
-                    "internalType": "address",
-                    "name": "token",
-                    "type": "address"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "amount",
-                    "type": "uint256"
-                  }
-                ],
-                "internalType": "struct ISignatureTransfer.TokenPermissions",
-                "name": "permitted",
-                "type": "tuple"
-              },
-              {
-                "internalType": "uint256",
-                "name": "nonce",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "deadline",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct ISignatureTransfer.PermitTransferFrom",
-            "name": "permit",
-            "type": "tuple"
-          },
-          {
-            "internalType": "bytes",
-            "name": "signature",
-            "type": "bytes"
-          }
-        ],
-        "internalType": "struct DonationWrapper.Permit2Data",
-        "name": "p2d",
-        "type": "tuple"
-      }
-    ],
-    "name": "testEncodeFull",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "newOwner",
         "type": "address"
@@ -675,24 +398,33 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "_to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
+        "internalType": "bytes",
         "name": "_message",
-        "type": "string"
+        "type": "bytes"
       },
       {
-        "internalType": "uint256",
-        "name": "_nonce",
-        "type": "uint256"
+        "internalType": "bytes",
+        "name": "_signature",
+        "type": "bytes"
+      }
+    ],
+    "name": "verify",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "donationData",
+        "type": "bytes"
       },
       {
         "internalType": "bytes",
@@ -700,7 +432,26 @@
         "type": "bytes"
       }
     ],
-    "name": "verify",
+    "name": "verifyDonation",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "message",
+        "type": "bytes"
+      }
+    ],
+    "name": "verifyDonation2",
     "outputs": [
       {
         "internalType": "bool",

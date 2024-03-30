@@ -168,7 +168,7 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
     }
 
     // Verifying Signatures
-    function verifyDonation(bytes memory donationData, bytes memory signature) internal pure returns (bool) {
+    function verifyDonation(bytes memory donationData, bytes memory signature) public pure returns (bool) {
         (,,address donor,) = abi.decode(
             donationData,
             (uint256, address, address, bytes) // roundId, grantee, donor, voteParams(encoded)
@@ -178,7 +178,7 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
     }
 
         // Verifying Signatures
-    function verifyDonation2(bytes memory message) internal pure returns (bool) {
+    function verifyDonation2(bytes memory message) public pure returns (bool) {
         (bytes memory donationData, bytes memory signature) = abi.decode(message, (bytes, bytes));
 
         (,,address donor,) = abi.decode(

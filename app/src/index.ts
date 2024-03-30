@@ -26,7 +26,7 @@ const dummyApplicationIndex = 1;
 const dummyRound = "0x0000000000000000000000000000000000000000";
 const donationContractAddressSepolia =
     "0xf473b415ab4604b52fbdaefc75fd2154a017c6df";
-const donationContractAddressBase ='0xe5290cEB8a1AF2b30Dbd83929d8524a03BB514B8';
+const donationContractAddressBase ='0xCB19C98D2A8939Cf6aCdCc02E076160ba1a371a6';
 const GRANTEE_CREATOR = "0x3f15B8c6F9939879Cb030D6dd935348E57109637"
 const ROUND_ID = 92;
 const RECIPIENT_ID = "0xF285db482fE8F1D779477C8DA2674B77925E56E3"
@@ -303,6 +303,7 @@ async function depositToSpokePool(
 
         console.log(await contractOrigin.verify(await signer.getAddress(), data.encodedMessage, data.signature))
         console.log(await contractOrigin.verifyDonation(data.encodedMessage, data.signature))
+        console.log(await contractOrigin.verifyDonation2(messageCombined))
 
         const outputToken = "0x0000000000000000000000000000000000000000";
         const exclusiveRelayer = "0x0000000000000000000000000000000000000000";
@@ -334,7 +335,7 @@ async function depositToSpokePool(
 
         const preparedTx = await contractOrigin.populateTransaction[
             "callDepositV3"
-        ](depositParams, data.encodedMessage);
+        ](depositParams, messageCombined);
 
         console.log("transaction data", {...preparedTx});
 
