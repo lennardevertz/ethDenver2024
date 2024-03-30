@@ -26,7 +26,7 @@ const dummyApplicationIndex = 1;
 const dummyRound = "0x0000000000000000000000000000000000000000";
 const donationContractAddressSepolia =
     "0xf473b415ab4604b52fbdaefc75fd2154a017c6df";
-const donationContractAddressBase ='0xfbc2719595bb1225e838cb42f3f2eb78937d58eb';
+const donationContractAddressBase ='0xe5290cEB8a1AF2b30Dbd83929d8524a03BB514B8';
 const GRANTEE_CREATOR = "0x3f15B8c6F9939879Cb030D6dd935348E57109637"
 const ROUND_ID = 92;
 const RECIPIENT_ID = "0xF285db482fE8F1D779477C8DA2674B77925E56E3"
@@ -45,7 +45,7 @@ const contracts = {
 
 async function generateDataAndSignature(
 ) {
-    const recipientId='0xf285db482fe8f1d779477c8da2674b77925e56e3'
+    const recipientId = RECIPIENT_ID
     const amount = 1000000000000000
 
     const voteParam = generateVote(recipientId, amount);
