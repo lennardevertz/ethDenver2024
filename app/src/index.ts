@@ -1,6 +1,6 @@
 console.log("Hello Cross-chain Gitcoin donations!");
 // Ethers V5
-import {Bytes, ethers} from "ethers";
+import {BigNumber, Bytes, ethers} from "ethers";
 import dotenv from "dotenv";
 
 import wrapperABI from "../../contracts/abi/wrapper.json";
@@ -25,7 +25,7 @@ const dummyGranteeId = 1;
 const dummyApplicationIndex = 1;
 const dummyRound = "0x0000000000000000000000000000000000000000";
 const donationContractAddressSepolia =
-    "0xf473b415ab4604b52fbdaefc75fd2154a017c6df";
+    "0x1DdfE87E20FfED62FE54D645ED91c5c74B0efe98";
 const donationContractAddressBase ='0xCB19C98D2A8939Cf6aCdCc02E076160ba1a371a6';
 const GRANTEE_CREATOR = "0x3f15B8c6F9939879Cb030D6dd935348E57109637"
 const ROUND_ID = 92;
@@ -44,14 +44,15 @@ const contracts = {
 };
 
 async function generateDataAndSignature(
+    _amount: BigNumber
 ) {
     const recipientId = RECIPIENT_ID
-    const amount = 1000000000000000
 
-    const voteParam = generateVote(recipientId, amount);
+    const voteParam = generateVote(recipientId, _amount);
     console.log("voteParam: ", voteParam)
-
+    
     const encodedMessage = generateDonationData(ROUND_ID, GRANTEE_CREATOR, await signer.getAddress(), voteParam)
+    console.log("encodedMessage: ", encodedMessage)
     console.log(await contractOrigin.address)
 
     // const hashedEncoding = "0x5d4c17dad23576e1b624fd55b927691ecaa8b93ad820d89de42542f07ebb70eb";
@@ -87,7 +88,7 @@ function generateCombinedMessage(message: string, signature: string) {
 
 function generateVote(
     recipientId: string,
-    amount: number,
+    amount: BigNumber,
 ){
     const PermitTypeNone = 0; // Assuming None is the first in the enum and so is 0
     const NATIVE = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'; // replace with the actual address for NATIVE
@@ -296,15 +297,6 @@ async function depositToSpokePool(
     timestamp: number
 ) {
     try {
-
-        // use dummy data from indexer, works only on path base -> sepolia
-        const data = await generateDataAndSignature();
-        const messageCombined = generateCombinedMessage(data.encodedMessage, data.signature);
-
-        console.log(await contractOrigin.verify(await signer.getAddress(), data.encodedMessage, data.signature))
-        console.log(await contractOrigin.verifyDonation(data.encodedMessage, data.signature))
-        console.log(await contractOrigin.verifyDonation2(messageCombined))
-
         const outputToken = "0x0000000000000000000000000000000000000000";
         const exclusiveRelayer = "0x0000000000000000000000000000000000000000";
         const fillDeadline = Math.round(Date.now() / 1000) + 21600; // 6 hours from now
@@ -317,6 +309,16 @@ async function depositToSpokePool(
             ethers.BigNumber.from(totalRelayFee.total)
         );
         console.log("OutputAmount: ", outputAmount);
+
+        // use dummy data from indexer, works only on path base -> sepolia
+        const data = await generateDataAndSignature(outputAmount);
+        const messageCombined = generateCombinedMessage(data.encodedMessage, data.signature);
+        console.log("combined message", messageCombined)
+
+        console.log(await contractOrigin.verify(await signer.getAddress(), data.encodedMessage, data.signature))
+        console.log(await contractOrigin.verifyDonation(data.encodedMessage, data.signature))
+        console.log(await contractOrigin.verifyDonation2(messageCombined))
+        
 
         const depositParams = {
             recipient: contracts[destinationChainId.toString() as SupportedTokenKeys],
@@ -343,6 +345,10 @@ async function depositToSpokePool(
             from: await signer.getAddress(),
             value: amount.toString(),
         };
+
+        console.log("Sending ", amount.toString())
+        console.log("Receiving ", outputAmount.toString())
+        console.log("From token ", outputToken)
 
         const result = await signer.sendTransaction({
             ...preparedTx,
