@@ -31,7 +31,7 @@ async function main() {
         [
             "0xC2679fBD37d54388Ce493F1DB75320D236e1815e", // EAS
             "0x420dff44c420eb8b3ff3f172fb1a7d2978d333a43e3bf5337fadddd45134b860", // SCHEMA
-            "0x974fDBc4Ff3Ae73Ceeba5B4c85521F2638ee54e5", // ACROSS_SPOKE_POOL ToDo: change back to "0x5ef6C01E11889d86803e0B23e3cB3F9E9d97B662"
+            "0x5ef6C01E11889d86803e0B23e3cB3F9E9d97B662", // ACROSS_SPOKE_POOL
             "0x1133eA7Af70876e64665ecD07C0A0476d09465a1", // ALLO
             "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14" // WETH
         ],
@@ -43,8 +43,6 @@ async function main() {
     console.log(`Deployed at ${await wrapperSepolia.getAddress()}`);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main().catch((error) => {
     console.error(error);
     process.exitCode = 1;

@@ -21,14 +21,16 @@ let signer: ethers.Signer;
 let contractOrigin: ethers.Contract;
 let availableRoutes;
 
+const NULL_ADDRESS = "0x0000000000000000000000000000000000000000"
 const dummyGranteeId = 1;
 const dummyApplicationIndex = 1;
-const dummyRound = "0x0000000000000000000000000000000000000000";
+const dummyRound = NULL_ADDRESS;
 const donationContractAddressSepolia =
     "0x1DdfE87E20FfED62FE54D645ED91c5c74B0efe98";
 const donationContractAddressBase ='0xCB19C98D2A8939Cf6aCdCc02E076160ba1a371a6';
+
 const GRANTEE_CREATOR = "0x3f15B8c6F9939879Cb030D6dd935348E57109637"
-const ROUND_ID = 92;
+const ROUND_ID = 98;
 const RECIPIENT_ID = "0xF285db482fE8F1D779477C8DA2674B77925E56E3"
 
 
@@ -207,13 +209,10 @@ document.getElementById("callBridge")?.addEventListener("click", async () => {
         console.log("amount: ", amount);
         console.log("requesting switch to ", originChainId, ethers.utils.hexValue(originChainId))
     if (!signer) {
-        // Request account access if needed
         await window.ethereum.request({method: "eth_requestAccounts"});
 
-        // Create a Web3 provider from the window.ethereum object
         provider = new ethers.providers.Web3Provider(window.ethereum, "any");
 
-        // You now have access to the user's wallet
         signer = await provider.getSigner();
         console.log("Connected account:", await signer.getAddress());
 
@@ -297,8 +296,8 @@ async function depositToSpokePool(
     timestamp: number
 ) {
     try {
-        const outputToken = "0x0000000000000000000000000000000000000000";
-        const exclusiveRelayer = "0x0000000000000000000000000000000000000000";
+        const outputToken = NULL_ADDRESS;
+        const exclusiveRelayer = NULL_ADDRESS;
         const fillDeadline = Math.round(Date.now() / 1000) + 21600; // 6 hours from now
         const exclusivityDeadline = 0;
 

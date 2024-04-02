@@ -85,19 +85,20 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
         handleDonation(donationData, amount, tokenSent, relayer);
     }
     
+    // Testing function
     function handleV3AcrossMessageV2(
         address tokenSent,
         uint256 amount,
         address relayer,
         bytes memory message
     ) external payable nonReentrant {
-        if (msg.sender != SPOKE_POOL) revert Unauthorized();
+        if (msg.sender != owner()) revert Unauthorized();
 
         (bytes memory donationData, bytes memory signature) = abi.decode(message, (bytes, bytes));
 
         if (!verifyDonation(donationData, signature)) revert Unauthorized();
 
-        handleDonationV2(donationData, amount, tokenSent, relayer);
+        handleDonation(donationData, amount, tokenSent, relayer);
     }
 
     function callDepositV3(
@@ -125,7 +126,7 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
         //     permit: ISignatureTransfer.PermitTransferFrom({
         //         permitted: ISignatureTransfer.TokenPermissions({token: NATIVE, amount: amount}),
         //         nonce: 0,
-        //         deadline: testOffset + 10000
+        //         deadline: 0
         //     }),
         //     signature: ""
         // });
@@ -149,25 +150,6 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
         _attestDonor(donor, grantee, recipientId, roundId, tokenSent, amount, relayer);        
         
         _vote(roundId, voteData, amount);
-    }
-
-    function handleDonationV2(bytes memory donationData, uint256 amount, address tokenSent, address relayer) internal {
-
-        (uint256 roundId, address grantee, address donor, bytes memory voteData) = abi.decode(
-            donationData,
-            (uint256, address, address, bytes) // roundId, grantee, donor, voteParams(encoded)
-        );
-
-        (address recipientId,, Permit2Data memory permit2Data) = abi.decode(voteData, (address, PermitType, Permit2Data));
-
-        if (amount < permit2Data.permit.permitted.amount) revert InsufficientFunds();
-
-        // Only support WETH transfers for now. This can be switched to a swap() call in the future to allow for wider token support.
-        unwrapWETH(amount);
-
-        // setup new schema
-        _attestDonor(donor, grantee, recipientId, roundId, tokenSent, amount, relayer);        
-        
     }
 
     function _vote(uint256 _roundId, bytes memory _voteData, uint256 _amount) internal {
@@ -211,7 +193,7 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
         return verify(donor, donationData, signature);
     }
 
-        // Verifying Signatures
+    // Testing function
     function verifyDonation2(bytes memory message) public pure returns (bool) {
         (bytes memory donationData, bytes memory signature) = abi.decode(message, (bytes, bytes));
 
@@ -222,13 +204,6 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
 
         return verify(donor, donationData, signature);
     }    
-    
-    
-    function verifyDonation3(bytes memory message) public pure returns (bool) {
-        (bytes memory donationData, bytes memory signature) = abi.decode(message, (bytes, bytes));
-
-        return verifyDonation(donationData, signature);
-    }
 
     function getMessageHash(
         bytes memory _message
