@@ -16,6 +16,40 @@ console.log(process.env);
 
 type SupportedTokenKeys = "11155111" | "84532";
 
+const GITCOIN_GRAPHQL_API_URL = "https://grants-stack-indexer-v2.gitcoin.co/graphql"
+const sample_query = `query Applications {
+    applications(
+      filter: {roundId: {equalTo: "92"}, chainId: {equalTo: 11155111}, status: {equalTo: APPROVED}}
+    ) {
+      id
+      project {
+        anchorAddress
+        id
+        metadata
+        name
+        registryAddress
+      }
+    }
+  }`
+
+async function fetch_gitcoin() {
+    const response = await fetch(GITCOIN_GRAPHQL_API_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            query: sample_query,
+            operationName: 'SomeName',
+            // TODO: make sure undefined is fine
+            variables: undefined,
+        }),
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        })
+    
+    const json = await response.json();
+    return json
+}
+
 let provider: ethers.providers.Web3Provider;
 let signer: ethers.Signer;
 let contractOrigin: ethers.Contract;
@@ -26,12 +60,12 @@ const dummyGranteeId = 1;
 const dummyApplicationIndex = 1;
 const dummyRound = NULL_ADDRESS;
 const donationContractAddressSepolia =
-    "0x1DdfE87E20FfED62FE54D645ED91c5c74B0efe98";
-const donationContractAddressBase ='0xCB19C98D2A8939Cf6aCdCc02E076160ba1a371a6';
+    "0xDfF3E34DaD6CBD56A906A0946fc32BD36fcbe105";
+const donationContractAddressBase ='0x269730D5ee3E9b95b0DAeb9048149014A71a7668';
 
-const GRANTEE_CREATOR = "0x3f15B8c6F9939879Cb030D6dd935348E57109637"
-const ROUND_ID = 98;
-const RECIPIENT_ID = "0xF285db482fE8F1D779477C8DA2674B77925E56E3"
+const GRANTEE_CREATOR = "0x974fDBc4Ff3Ae73Ceeba5B4c85521F2638ee54e5"
+const ROUND_ID = 99;
+const RECIPIENT_ID = "0x27B4037e0cC824519d2A61C3C103637d5a345226"
 
 
 let selectedNetwork: string = "Ethereum";
@@ -51,6 +85,7 @@ async function generateDataAndSignature(
     const recipientId = RECIPIENT_ID
 
     const voteParam = generateVote(recipientId, _amount);
+    console.log("Amount for voteParams:", _amount.toString())
     console.log("voteParam: ", voteParam)
     
     const encodedMessage = generateDonationData(ROUND_ID, GRANTEE_CREATOR, await signer.getAddress(), voteParam)
@@ -66,6 +101,23 @@ async function generateDataAndSignature(
 
     return {encodedMessage, signature}
 }
+
+function generatedummy(
+) {
+    const abiCoder = ethers.utils.defaultAbiCoder;
+    return abiCoder.encode(
+        ["address", "address", "tuple(uint256, string)"],
+        ["0x27B4037e0cC824519d2A61C3C103637d5a345226", "0x974fDBc4Ff3Ae73Ceeba5B4c85521F2638ee54e5", [1,"bafkreiemxldojvpj2aqcxa7gn2yz5jkomwwgyyszodldspjfnlksoaebky"]]
+    );
+}
+
+function generatereversedummy(){
+    const abiCoder = ethers.utils.defaultAbiCoder;
+    return abiCoder.decode(["address", "address", "tuple(uint256, string)"], "0x000000000000000000000000f285db482fe8f1d779477c8da2674b77925e56e30000000000000000000000003f15b8c6f9939879cb030d6dd935348e57109637000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000003b6261666b726569656d786c646f6a76706a32617163786137676e32797a356a6b6f6d7777677979737a6f646c6473706a666e6c6b736f6165626b790000000000")
+}
+
+console.log("dummy ", generatedummy())
+console.log("dummy ", generatereversedummy())
 
 function generateDonationData(
     roundId: number,

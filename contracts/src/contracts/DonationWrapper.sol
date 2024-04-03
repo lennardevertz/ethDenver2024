@@ -85,22 +85,6 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
         handleDonation(donationData, amount, tokenSent, relayer);
     }
     
-    // Testing function
-    function handleV3AcrossMessageV2(
-        address tokenSent,
-        uint256 amount,
-        address relayer,
-        bytes memory message
-    ) external payable nonReentrant {
-        if (msg.sender != owner()) revert Unauthorized();
-
-        (bytes memory donationData, bytes memory signature) = abi.decode(message, (bytes, bytes));
-
-        if (!verifyDonation(donationData, signature)) revert Unauthorized();
-
-        handleDonation(donationData, amount, tokenSent, relayer);
-    }
-
     function callDepositV3(
         DepositParams memory params,
         bytes memory message
@@ -120,20 +104,6 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
     }
 
     function handleDonation(bytes memory donationData, uint256 amount, address tokenSent, address relayer) internal {
-
-        // Permit2Data memory permit2Data =
-        // Permit2Data({
-        //     permit: ISignatureTransfer.PermitTransferFrom({
-        //         permitted: ISignatureTransfer.TokenPermissions({token: NATIVE, amount: amount}),
-        //         nonce: 0,
-        //         deadline: 0
-        //     }),
-        //     signature: ""
-        // });
-
-        // _vote(roundId, recipientId, permit2Data);
-
-
         (uint256 roundId, address grantee, address donor, bytes memory voteData) = abi.decode(
             donationData,
             (uint256, address, address, bytes) // roundId, grantee, donor, voteParams(encoded)
@@ -156,13 +126,9 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
         alloContract.allocate{value: _amount}(
             _roundId, _voteData
         );
-        // alloContract.allocate{value: permit2Data.permit.permitted.amount}(
-        //     roundId, abi.encode(recipientId, PermitType.None, permit2Data)
-        // );
     }
 
      function makeDeposit(DepositParams memory params, bytes memory message) internal {
-        // make sure that params.outputAmount >= amount in voteParams
         spokePool.depositV3{value: msg.value}(
             msg.sender, // donor
             params.recipient,
@@ -192,18 +158,6 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
 
         return verify(donor, donationData, signature);
     }
-
-    // Testing function
-    function verifyDonation2(bytes memory message) public pure returns (bool) {
-        (bytes memory donationData, bytes memory signature) = abi.decode(message, (bytes, bytes));
-
-        (,,address donor,) = abi.decode(
-            donationData,
-            (uint256, address, address, bytes) // roundId, grantee, donor, voteParams(encoded)
-        );
-
-        return verify(donor, donationData, signature);
-    }    
 
     function getMessageHash(
         bytes memory _message
