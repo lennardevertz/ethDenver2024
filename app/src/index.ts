@@ -63,7 +63,7 @@ const donationContractAddressSepolia =
     "0xDfF3E34DaD6CBD56A906A0946fc32BD36fcbe105";
 const donationContractAddressBase ='0x269730D5ee3E9b95b0DAeb9048149014A71a7668';
 
-const GRANTEE_CREATOR = "0x974fDBc4Ff3Ae73Ceeba5B4c85521F2638ee54e5"
+const GRANTEE_ADDRESS = "0x974fDBc4Ff3Ae73Ceeba5B4c85521F2638ee54e5"
 const ROUND_ID = 99;
 const RECIPIENT_ID = "0x27B4037e0cC824519d2A61C3C103637d5a345226"
 
@@ -88,7 +88,7 @@ async function generateDataAndSignature(
     console.log("Amount for voteParams:", _amount.toString())
     console.log("voteParam: ", voteParam)
     
-    const encodedMessage = generateDonationData(ROUND_ID, GRANTEE_CREATOR, await signer.getAddress(), voteParam)
+    const encodedMessage = generateDonationData(ROUND_ID, GRANTEE_ADDRESS, await signer.getAddress(), voteParam)
     console.log("encodedMessage: ", encodedMessage)
     console.log(await contractOrigin.address)
 
@@ -191,18 +191,13 @@ async function callAcrossAPI(
     endpoint: string,
     params?: QueryParams
 ): Promise<any> {
-    // if (endpoint == endpoints.fee) return ACROSS_MOCK_FEE_RESPONSE;
-    // if (endpoint == endpoints.limits) return ACROSS_MOCK_LIMIT_RESPONSE;
     try {
-        // Build the URL with query parameters
         let url = new URL(endpoint);
         if (params) {
             Object.keys(params).forEach((key) =>
                 url.searchParams.append(key, params[key].toString())
             );
         }
-
-        // Perform the fetch request
         const response = await fetch(url.toString());
         if (!response.ok) {
             throw new Error(`Error! status: ${response.status}`);
