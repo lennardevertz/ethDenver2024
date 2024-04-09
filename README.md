@@ -39,6 +39,8 @@ There is a conflict of interest between L2s sponsoring Gitcoin rounds, and donor
 V2
 Wrapper (Base-Sepolia): [0x653fcbb87997B1b85059a464De7D63Ff58b89a59](https://sepolia.basescan.org/address/0x653fcbb87997B1b85059a464De7D63Ff58b89a59)
 Wrapper (Sepolia): [0xF473b415aB4604b52Fbdaefc75fD2154A017C6dF](https://sepolia.etherscan.io/address/0xF473b415aB4604b52Fbdaefc75fD2154A017C6dF)
+Wrapper (Optimism): [0x1Ce21455F1D6776ccD515BCD7D892Bd4cFAdCee4](https://optimistic.etherscan.io/address/0x1Ce21455F1D6776ccD515BCD7D892Bd4cFAdCee4)
+Wrapper (Arbitrum): [0x0c51AE117e8e4028e653FA3Bd5ccBaB97861c045](https://arbiscan.io/address/0x0c51AE117e8e4028e653FA3Bd5ccBaB97861c045)
 
 
 The background image used in the logo was generated with the [Midjourney](https://www.midjourney.com/) text-to-image AI model. Prompt: pastel illustratios of a tent in the mountains --v 5.1</p>

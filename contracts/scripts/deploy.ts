@@ -17,15 +17,15 @@ async function main() {
         return;
     }
 
-    // const wrapper = await ethers.deployContract(
-    //     "DonationWrapper",
-    //     constructorArguments,
-    //     {}
-    // );
+    const wrapper = await ethers.deployContract(
+        "DonationWrapper",
+        constructorArguments,
+        {}
+    );
 
-    // await wrapper.waitForDeployment();
+    await wrapper.waitForDeployment();
 
-    // console.log(`Deployed at ${await wrapper.getAddress()}`);
+    console.log(`Deployed at ${await wrapper.getAddress()}`);
 }
 
 main().catch((error) => {

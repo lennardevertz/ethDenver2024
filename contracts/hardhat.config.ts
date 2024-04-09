@@ -41,9 +41,9 @@ const config: HardhatUserConfig = {
           accounts: [process.env.PRIVATE_KEY!],
         },
         arbitrum: {
-          chainId: 42161, // Chain ID for Arbitrum One (mainnet)
-          url: 'https://arb1.arbitrum.io/rpc', // RPC URL for Arbitrum One
-          accounts: [process.env.PRIVATE_KEY!], // Load private key from environment variable
+          chainId: 42161, 
+          url: 'https://arb1.arbitrum.io/rpc', 
+          accounts: [process.env.PRIVATE_KEY!], 
         },
         linea_mainnet: {
           chainId: 59144,
@@ -67,7 +67,9 @@ const config: HardhatUserConfig = {
           'base-sepolia': process.env.BASESCAN_KEY!,
           base: process.env.BASESCAN_KEY!,
           optimism: process.env.BASESCAN_KEY!,
-          arbitrum: process.env.BASESCAN_KEY!,
+          optimisticEthereum: process.env.OPSCAN_KEY!,
+          arbitrum: process.env.ARBSCAN_KEY!,
+          arbitrumOne: process.env.ARBSCAN_KEY!,
           linea_mainnet: process.env.LINEASCAN_KEY!
         },
         customChains: [
