@@ -31,13 +31,13 @@ contract PublicGoodAttester {
 
     function _attestDonor(
         address _donor,
-        address _grantee,
         address _recipientId,
         uint256 _round,
         address _tokenSent,
         uint256 _amount,
         address _relayer
     ) internal {
+        if (address(EAS) == address(0)) return;
         EAS.attest(
             AttestationRequest({
                 schema: EAS_SCHEMA,
@@ -48,7 +48,6 @@ contract PublicGoodAttester {
                     refUID: EMPTY_UID,
                     data: abi.encode(
                         _donor,
-                        _grantee,
                         _recipientId,
                         _round,
                         _tokenSent,

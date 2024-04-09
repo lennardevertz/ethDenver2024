@@ -18,6 +18,7 @@ import {WETH9Interface} from "./interfaces/IWETH.sol";
 contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester {
     error Unauthorized();
     error InsufficientFunds();
+    error NoRoundOnDestination();
 
     event Logger(bytes);
 
@@ -92,9 +93,9 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
 
         (bytes memory donationData, bytes memory signature) = abi.decode(message, (bytes, bytes));
 
-        (,,address donor,) = abi.decode(
+        (,address donor,) = abi.decode(
             donationData,
-            (uint256, address, address, bytes) // roundId, grantee, donor, voteParams(encoded)
+            (uint256, address, bytes) // roundId, grantee, donor, voteParams(encoded)
         );
 
         // Verifying donationData
@@ -104,9 +105,9 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
     }
 
     function handleDonation(bytes memory donationData, uint256 amount, address tokenSent, address relayer) internal {
-        (uint256 roundId, address grantee, address donor, bytes memory voteData) = abi.decode(
+        (uint256 roundId, address donor, bytes memory voteData) = abi.decode(
             donationData,
-            (uint256, address, address, bytes) // roundId, grantee, donor, voteParams(encoded)
+            (uint256, address, bytes) // roundId, donor, voteParams(encoded)
         );
 
         (address recipientId,, Permit2Data memory permit2Data) = abi.decode(voteData, (address, PermitType, Permit2Data));
@@ -117,12 +118,13 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
         unwrapWETH(amount);
 
         // setup new schema
-        _attestDonor(donor, grantee, recipientId, roundId, tokenSent, amount, relayer);        
+        _attestDonor(donor, recipientId, roundId, tokenSent, amount, relayer);        
         
         _vote(roundId, voteData, amount);
     }
 
     function _vote(uint256 _roundId, bytes memory _voteData, uint256 _amount) internal {
+        if (address(alloContract) == address(0)) revert NoRoundOnDestination();
         alloContract.allocate{value: _amount}(
             _roundId, _voteData
         );
@@ -151,9 +153,9 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
 
     // Verifying Signatures
     function verifyDonation(bytes memory donationData, bytes memory signature) public pure returns (bool) {
-        (,,address donor,) = abi.decode(
+        (,address donor,) = abi.decode(
             donationData,
-            (uint256, address, address, bytes) // roundId, grantee, donor, voteParams(encoded)
+            (uint256, address, bytes) // roundId, grantee, donor, voteParams(encoded)
         );
 
         return verify(donor, donationData, signature);
