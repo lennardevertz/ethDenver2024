@@ -14,7 +14,10 @@ declare global {
 dotenv.config();
 console.log(process.env);
 
-type SupportedTokenKeys = "11155111" | "84532";
+type SupportedTokenKeys = "10" | "42161";
+type TokenMap = {[key: string]: string};
+
+const tokenMap: TokenMap = SUPPORTED_TOKEN as TokenMap;
 
 const GITCOIN_GRAPHQL_API_URL =
     "https://grants-stack-indexer-v2.gitcoin.co/graphql";
@@ -53,13 +56,10 @@ async function fetch_gitcoin() {
 
 console.log(await fetch_gitcoin());
 console.log(
-    (await fetch_gitcoin()).data.applications[0].project.projectTwitter
+    (await fetch_gitcoin()).data.applications[0].project.metadata.projectTwitter
 );
 console.log((await fetch_gitcoin()).data.applications[0].project.anchorAddress);
-console.log(
-    (await fetch_gitcoin()).data.applications[0].project.metadata.application
-        .recipient
-);
+
 
 let provider: ethers.providers.Web3Provider;
 let signer: ethers.Signer;
@@ -71,17 +71,23 @@ const donationContractAddressSepolia =
     "0xDfF3E34DaD6CBD56A906A0946fc32BD36fcbe105";
 const donationContractAddressBase =
     "0x269730D5ee3E9b95b0DAeb9048149014A71a7668";
+const donationContractAddressArbitrum =
+    "0xaA098E5c9B002F815d7c9756BCfce0fC18B3F362";
+const donationContractAddressOptimism =
+    "0x1Ce21455F1D6776ccD515BCD7D892Bd4cFAdCee4";
 
-const ROUND_ID = 99;
-const RECIPIENT_ID = "0x27B4037e0cC824519d2A61C3C103637d5a345226";
+const ROUND_ID = 34;
+const RECIPIENT_ID = "0xf8590ccb6c0d7069f61e397beeb7c0f931b6fc0d";
 
 let selectedNetwork: string = "Ethereum";
-let selectedAmount = 15;
+let selectedAmount = 2;
 
-const networkId = {Ethereum: 11155111, Base: 84532};
+const networkId = {Ethereum: 10, Base: 42161}; // Ethereum -> Optimism, Base -> Arbitrum
 const contracts = {
-    "11155111": donationContractAddressSepolia,
-    "84532": donationContractAddressBase,
+    // "11155111": donationContractAddressSepolia,
+    // "84532": donationContractAddressBase,
+    "42161": donationContractAddressArbitrum,
+    "10": donationContractAddressOptimism,
 };
 
 async function generateDataAndSignature(_amount: BigNumber) {
@@ -130,8 +136,8 @@ function generatereversedummy() {
     );
 }
 
-console.log("dummy ", generatedummy());
-console.log("dummy ", generatereversedummy());
+// console.log("dummy ", generatedummy());
+// console.log("dummy ", generatereversedummy());
 
 function generateDonationData(
     roundId: number,
@@ -252,8 +258,7 @@ document.getElementById("callBridge")?.addEventListener("click", async () => {
     const destinationChainId = Object.entries(networkId)
         .filter(([networkName, _]) => networkName !== selectedNetwork)
         .map(([_, chainId]) => chainId)[0] as number;
-    const token =
-        SUPPORTED_TOKEN[originChainId.toString() as SupportedTokenKeys];
+    const token = tokenMap[originChainId.toString()];
     const amountRequest = await getSwapPrice(
         "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
@@ -297,15 +302,15 @@ document.getElementById("callBridge")?.addEventListener("click", async () => {
         availableRoutes = await callAcrossAPI(endpoints.routes, {});
 
         const suggested_fees = await callAcrossAPI(endpoints.fee, {
-            originChainId: 1,
-            destinationChainId: 8453,
-            token: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+            originChainId: originChainId,
+            destinationChainId: destinationChainId,
+            token: tokenMap[originChainId.toString()],
             amount: amount.toString(),
         });
         console.log(suggested_fees);
         const totalFee = suggested_fees.totalRelayFee.total;
         console.log("Total fee ", totalFee);
-        console.log("When sending ", amount.toString(), " from base to op");
+        console.log("When sending ", amount.toString(), " from op to arb");
         console.log(
             "Sending a total of ",
             ethers.BigNumber.from(totalFee).add(amount).toString(),
@@ -314,9 +319,9 @@ document.getElementById("callBridge")?.addEventListener("click", async () => {
         const timestamp = suggested_fees.timestamp as number;
         console.log("Timestamp", timestamp);
         const limits = await callAcrossAPI(endpoints.limits, {
-            originChainId: 1,
-            destinationChainId: 8453,
-            token: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+            originChainId: originChainId,
+            destinationChainId: destinationChainId,
+            token: tokenMap[originChainId.toString()],
         });
         console.log("limits: ", limits);
         const maxDepositInstant = limits.maxDepositInstant;
@@ -365,10 +370,11 @@ async function depositToSpokePool(
         console.log("amount", amount);
         console.log("totalRelayFee.total", totalRelayFee.total);
 
-        const outputAmount = amount.sub(
-            ethers.BigNumber.from(totalRelayFee.total)
-        );
-        console.log("OutputAmount: ", outputAmount);
+        // const outputAmount = amount.sub(
+        //     ethers.BigNumber.from(totalRelayFee.total)
+        // );
+        const outputAmount = amount
+        console.log("OutputAmount: ", outputAmount.toString());
 
         // use dummy data from indexer, works only on path base -> sepolia
         const data = await generateDataAndSignature(outputAmount);
@@ -377,6 +383,47 @@ async function depositToSpokePool(
             data.signature
         );
         console.log("combined message", messageCombined);
+
+        const optimalRes = await findOptimalAmountIn(outputAmount, messageCombined)
+
+        console.log("Optimal result", optimalRes.optimalAmountIn.toString(), optimalRes.correspondingFee?.toString())
+
+        const data2 = await generateDataAndSignature(outputAmount.div(2));
+        const messageCombined2 = generateCombinedMessage(
+            data2.encodedMessage,
+            data2.signature
+        );
+        console.log("combined message", messageCombined2);
+
+        const suggested_fees = await callAcrossAPI(endpoints.fee, {
+            originChainId: 10,
+            destinationChainId: 42161,
+            token: tokenMap["10"],
+            amount: amount.toString(),
+            message: messageCombined,
+            recipient: donationContractAddressArbitrum
+        });
+        console.log(suggested_fees);
+        const totalFee = suggested_fees.totalRelayFee.total;
+        console.log("Total fee ", totalFee);
+        console.log("When sending ", amount.toString(), " from op to arb");
+        console.log(
+            "Sending a total of ",
+            ethers.BigNumber.from(totalFee).add(amount).toString(),
+            " from base to op"
+        );
+        const suggested_fees2 = await callAcrossAPI(endpoints.fee, {
+            originChainId: 10,
+            destinationChainId: 42161,
+            token: tokenMap["10"],
+            amount: amount.div(2).toString(),
+            message: messageCombined2,
+            recipient: donationContractAddressArbitrum
+        });
+        console.log(suggested_fees2);
+        console.log("Compare")
+        console.log(suggested_fees, suggested_fees2)
+
 
         console.log(
             await contractOrigin.verify(
@@ -391,7 +438,6 @@ async function depositToSpokePool(
                 data.signature
             )
         );
-        console.log(await contractOrigin.verifyDonation2(messageCombined));
 
         const depositParams = {
             recipient:
@@ -533,3 +579,45 @@ dropdown.addEventListener("click", (event) => {
 
 // Initialize with the default selection
 updateDropdownOptions("Ethereum");
+
+
+async function calculateFee(amountIn: BigNumber, encodedMessage: string): Promise<BigNumber> {
+
+    const suggested_fees = await callAcrossAPI(endpoints.fee, {
+        originChainId: 10,
+        destinationChainId: 42161,
+        token: tokenMap["10"],
+        amount: amountIn.toString(),
+        message: encodedMessage,
+        recipient: donationContractAddressArbitrum
+    });
+    console.log("Amount: ", amountIn.toString(), "Suggested Fee: ", suggested_fees.totalRelayFee.total);
+
+    return ethers.BigNumber.from(suggested_fees.totalRelayFee.total);
+}
+
+async function findOptimalAmountIn(amountOut: BigNumber, encodedMessage: string , maxIterations: number = 7): Promise<{ optimalAmountIn: BigNumber; correspondingFee: BigNumber | null; }> {
+    let lowerBound = amountOut;
+    let upperBound = amountOut.mul(110).div(100);
+    let optimalAmountIn = upperBound; 
+    let correspondingFee: BigNumber | null = null;
+    let iteration = 0;
+
+    while (iteration < maxIterations) {
+        const midPoint = lowerBound.add(upperBound).div(2);
+        try {
+            const fee = await calculateFee(midPoint, encodedMessage);
+
+            optimalAmountIn = midPoint;
+            correspondingFee = fee;
+            upperBound = midPoint;
+        } catch (error) {
+            console.log(error)
+            lowerBound = midPoint;
+        }
+
+        iteration++;
+    }
+
+    return { optimalAmountIn, correspondingFee };
+}

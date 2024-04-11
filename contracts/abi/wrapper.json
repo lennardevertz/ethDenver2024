@@ -42,6 +42,11 @@
   },
   {
     "inputs": [],
+    "name": "NoRoundOnDestination",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "Unauthorized",
     "type": "error"
   },

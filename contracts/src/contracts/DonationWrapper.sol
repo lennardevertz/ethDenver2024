@@ -118,9 +118,9 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
         unwrapWETH(amount);
 
         // setup new schema
-        _attestDonor(donor, recipientId, roundId, tokenSent, amount, relayer);        
+        _attestDonor(donor, recipientId, roundId, tokenSent, permit2Data.permit.permitted.amount, relayer);        
         
-        _vote(roundId, voteData, amount);
+        _vote(roundId, voteData, permit2Data.permit.permitted.amount);
     }
 
     function _vote(uint256 _roundId, bytes memory _voteData, uint256 _amount) internal {
@@ -209,6 +209,14 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
             s := mload(add(sig, 64))
             v := byte(0, mload(add(sig, 96)))
         }
+    }
+
+    /**
+     * @notice Withdraw accidentally sent native currency
+     */
+    function withdraw() external onlyOwner {
+        (bool success, ) = msg.sender.call{value: address(this).balance}("");
+        require(success, "Failed to withdraw.");
     }
 
     receive() external payable {}
