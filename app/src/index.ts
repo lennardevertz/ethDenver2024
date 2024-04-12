@@ -370,33 +370,30 @@ async function depositToSpokePool(
         console.log("amount", amount);
         console.log("totalRelayFee.total", totalRelayFee.total);
 
-        // const outputAmount = amount.sub(
-        //     ethers.BigNumber.from(totalRelayFee.total)
-        // );
         const outputAmount = amount
         console.log("OutputAmount: ", outputAmount.toString());
 
-        // use dummy data from indexer, works only on path base -> sepolia
         const data = await generateDataAndSignature(outputAmount);
+        const data2 = await generateDataAndSignature(outputAmount.mul(2));
+        const data5 = await generateDataAndSignature(outputAmount.mul(5));
         const messageCombined = generateCombinedMessage(
             data.encodedMessage,
             data.signature
         );
         console.log("combined message", messageCombined);
-
-        const optimalRes = await findOptimalAmountIn(outputAmount, messageCombined)
-
-        console.log("Optimal result", optimalRes.optimalAmountIn.toString(), optimalRes.correspondingFee?.toString())
-
-        const data2 = await generateDataAndSignature(outputAmount.div(2));
         const messageCombined2 = generateCombinedMessage(
             data2.encodedMessage,
             data2.signature
         );
-        console.log("combined message", messageCombined2);
+        console.log("combined message2", messageCombined2);
+        const messageCombined5 = generateCombinedMessage(
+            data5.encodedMessage,
+            data5.signature
+        );
+        console.log("combined message5", messageCombined5);
 
         const suggested_fees = await callAcrossAPI(endpoints.fee, {
-            originChainId: 10,
+            originChainId: 10, // optional
             destinationChainId: 42161,
             token: tokenMap["10"],
             amount: amount.toString(),
@@ -412,18 +409,6 @@ async function depositToSpokePool(
             ethers.BigNumber.from(totalFee).add(amount).toString(),
             " from base to op"
         );
-        const suggested_fees2 = await callAcrossAPI(endpoints.fee, {
-            originChainId: 10,
-            destinationChainId: 42161,
-            token: tokenMap["10"],
-            amount: amount.div(2).toString(),
-            message: messageCombined2,
-            recipient: donationContractAddressArbitrum
-        });
-        console.log(suggested_fees2);
-        console.log("Compare")
-        console.log(suggested_fees, suggested_fees2)
-
 
         console.log(
             await contractOrigin.verify(
@@ -487,7 +472,6 @@ async function depositToSpokePool(
 }
 
 // handling clicks
-
 document
     .querySelectorAll<HTMLElement>("#valueSelection > *")
     .forEach((b: HTMLElement) => {
@@ -521,7 +505,7 @@ dropdownButton.onclick = () => {
 
 // Function to update dropdown options
 const updateDropdownOptions = (selectedNetwork: string) => {
-    const allNetworks = ["Ethereum", "Base", "Bitcoin"]; // Add all possible networks here
+    const allNetworks = ["Ethereum", "Base"]; // Add all possible networks here
     const availableNetworks = allNetworks.filter(
         (network) => network !== selectedNetwork
     );

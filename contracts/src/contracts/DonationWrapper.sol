@@ -98,7 +98,6 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
             (uint256, address, bytes) // roundId, grantee, donor, voteParams(encoded)
         );
 
-        // Verifying donationData
         if (!verifyDonation(donationData, signature) || msg.sender != donor) revert Unauthorized();
 
         makeDeposit(params, message);
@@ -117,7 +116,6 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
         // Only support WETH transfers for now. This can be switched to a swap() call in the future to allow for wider token support.
         unwrapWETH(amount);
 
-        // setup new schema
         _attestDonor(donor, recipientId, roundId, tokenSent, permit2Data.permit.permitted.amount, relayer);        
         
         _vote(roundId, voteData, permit2Data.permit.permitted.amount);
@@ -213,6 +211,7 @@ contract DonationWrapper is Ownable, ReentrancyGuard, Native, PublicGoodAttester
 
     /**
      * @notice Withdraw accidentally sent native currency
+     * @notice Amount sent through AcrossV3 will always be forwarded 100%
      */
     function withdraw() external onlyOwner {
         (bool success, ) = msg.sender.call{value: address(this).balance}("");
