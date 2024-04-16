@@ -80,7 +80,7 @@ const ROUND_ID = 34;
 const RECIPIENT_ID = "0xf8590ccb6c0d7069f61e397beeb7c0f931b6fc0d";
 
 let selectedNetwork: string = "Ethereum";
-let selectedAmount = 2;
+let selectedAmount = 1;
 
 const networkId = {Ethereum: 10, Base: 42161}; // Ethereum -> Optimism, Base -> Arbitrum
 const contracts = {
@@ -373,7 +373,7 @@ async function depositToSpokePool(
         const outputAmount = amount
         console.log("OutputAmount: ", outputAmount.toString());
 
-        const data = await generateDataAndSignature(outputAmount);
+        const data = await generateDataAndSignature(outputAmount.div(10));
         const data2 = await generateDataAndSignature(outputAmount.mul(2));
         const data5 = await generateDataAndSignature(outputAmount.mul(5));
         const messageCombined = generateCombinedMessage(
