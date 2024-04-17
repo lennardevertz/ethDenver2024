@@ -74,9 +74,9 @@ const donationContractAddressBase =
 const donationContractAddressArbitrum =
     "0xaA098E5c9B002F815d7c9756BCfce0fC18B3F362";
 const donationContractAddressOptimism =
-    "0x1Ce21455F1D6776ccD515BCD7D892Bd4cFAdCee4";
+    "0xd82BDb8391109f8BaD393Ff2CDa9E7Cd56F8239C";
 
-const ROUND_ID = 34;
+const ROUND_ID = 19;
 const RECIPIENT_ID = "0xf8590ccb6c0d7069f61e397beeb7c0f931b6fc0d";
 
 let selectedNetwork: string = "Ethereum";
@@ -288,6 +288,7 @@ document.getElementById("callBridge")?.addEventListener("click", async () => {
         });
     }
     try {
+        console.log("orogin chain:", originChainId)
         contractOrigin = new ethers.Contract(
             contracts[originChainId.toString() as SupportedTokenKeys],
             wrapperABI,
@@ -373,32 +374,32 @@ async function depositToSpokePool(
         const outputAmount = amount
         console.log("OutputAmount: ", outputAmount.toString());
 
-        const data = await generateDataAndSignature(outputAmount.div(10));
-        const data2 = await generateDataAndSignature(outputAmount.mul(2));
-        const data5 = await generateDataAndSignature(outputAmount.mul(5));
+        const data = await generateDataAndSignature(outputAmount.div(100));
+        // const data2 = await generateDataAndSignature(outputAmount.mul(2));
+        // const data5 = await generateDataAndSignature(outputAmount.mul(5));
         const messageCombined = generateCombinedMessage(
             data.encodedMessage,
             data.signature
         );
         console.log("combined message", messageCombined);
-        const messageCombined2 = generateCombinedMessage(
-            data2.encodedMessage,
-            data2.signature
-        );
-        console.log("combined message2", messageCombined2);
-        const messageCombined5 = generateCombinedMessage(
-            data5.encodedMessage,
-            data5.signature
-        );
-        console.log("combined message5", messageCombined5);
+        // const messageCombined2 = generateCombinedMessage(
+        //     data2.encodedMessage,
+        //     data2.signature
+        // );
+        // console.log("combined message2", messageCombined2);
+        // const messageCombined5 = generateCombinedMessage(
+        //     data5.encodedMessage,
+        //     data5.signature
+        // );
+        // console.log("combined message5", messageCombined5);
 
         const suggested_fees = await callAcrossAPI(endpoints.fee, {
-            originChainId: 10, // optional
-            destinationChainId: 42161,
-            token: tokenMap["10"],
+            originChainId: 42161, // optional
+            destinationChainId: 10,
+            token: tokenMap["42161"],
             amount: amount.toString(),
             message: messageCombined,
-            recipient: donationContractAddressArbitrum
+            recipient: donationContractAddressOptimism
         });
         console.log(suggested_fees);
         const totalFee = suggested_fees.totalRelayFee.total;
@@ -423,13 +424,14 @@ async function depositToSpokePool(
                 data.signature
             )
         );
+        console.log("inputAmount: ", amount.add(suggested_fees.totalRelayFee.total).mul(101).div(100).toString())
 
         const depositParams = {
             recipient:
                 contracts[destinationChainId.toString() as SupportedTokenKeys],
             inputToken: assetAddress,
             outputToken: outputToken,
-            inputAmount: amount,
+            inputAmount: amount.add(suggested_fees.totalRelayFee.total).mul(101).div(100),
             outputAmount: outputAmount,
             destinationChainId: destinationChainId,
             exclusiveRelayer: exclusiveRelayer,
@@ -448,7 +450,7 @@ async function depositToSpokePool(
 
         const sendOptions = {
             from: await signer.getAddress(),
-            value: amount.toString(),
+            value: amount.add(suggested_fees.totalRelayFee.total).mul(101).div(100).toString(),
         };
 
         console.log("Sending ", amount.toString());
