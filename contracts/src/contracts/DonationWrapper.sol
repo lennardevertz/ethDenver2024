@@ -8,7 +8,6 @@ import {PublicGoodAttester} from "./libs/Attestation.sol";
 
 import {Native} from "./libs/Native.sol";
 
-import {IDonations} from "./interfaces/IDonations.sol";
 import {IAllo} from "./interfaces/IAllo.sol";
 import {ISignatureTransfer} from "./interfaces/ISignatureTransfer.sol";
 import {V3SpokePoolInterface} from "./interfaces/ISpokePool.sol";
