@@ -65,12 +65,12 @@ contract PublicGoodAttester {
                     revocable: false,
                     refUID: EMPTY_UID,
                     data: abi.encode(
-                        _donor,
-                        _recipientId,
-                        _round,
-                        _tokenSent,
-                        _amount,
-                        _relayer
+                        _donor, // address
+                        _recipientId, // address
+                        _round, // uint256
+                        _tokenSent, // address
+                        _amount, // uint256
+                        _relayer // address
                     ),
                     value: 0 
                 })

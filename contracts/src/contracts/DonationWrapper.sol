@@ -98,7 +98,7 @@ contract DonationWrapper is
 
         (, address donor, ) = abi.decode(
             donationData,
-            (uint256, address, bytes) // roundId, grantee, donor, voteParams(encoded)
+            (uint256, address, bytes) // roundId, donor, voteParams(encoded)
         );
 
         if (!verifyDonation(donationData, signature) || msg.sender != donor)
@@ -240,7 +240,7 @@ contract DonationWrapper is
     ) public pure returns (bool) {
         (, address donor, ) = abi.decode(
             donationData,
-            (uint256, address, bytes) // roundId, grantee, donor, voteParams(encoded)
+            (uint256, address, bytes) // roundId, donor, voteParams(encoded)
         );
 
         return verify(donor, donationData, signature);
@@ -322,6 +322,15 @@ contract DonationWrapper is
     function initializeAllo(address allo) external onlyOwner {
         ALLO_ADDRESS = allo;
         alloContract = IAllo(ALLO_ADDRESS);
+    }
+
+    /**
+     * @notice Set up EAS contract
+     * @param eas The new address of the EAS contract.
+     * @param easSchema The schema that will host the attestation.
+     */
+    function initializeEAS(address eas, bytes32 easSchema) external onlyOwner {
+        _initializeEAS(eas, easSchema);
     }
 
     /**

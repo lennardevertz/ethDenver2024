@@ -1,13 +1,13 @@
 {
   "name": "contracts",
   "version": "1.0.0",
-  "description": "contracts for corss donations",
+  "description": "contracts for cross chain donations",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "geoist, levertz",
-  "license": "ISC",
+  "license": "GPLv3",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "hardhat": "^2.20.1",

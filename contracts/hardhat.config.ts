@@ -25,6 +25,11 @@ const config: HardhatUserConfig = {
             chainId: 1337,
             allowUnlimitedContractSize: true,
         },
+        mainnet: {
+          url: "https://eth.drpc.org",
+          accounts: [process.env.PRIVATE_KEY!],
+          chainId: 1
+        },
         sepolia: {
             chainId: 11155111,
             url: "https://rpc2.sepolia.org",
@@ -63,6 +68,7 @@ const config: HardhatUserConfig = {
       },
       etherscan: {
         apiKey: {
+          mainnet: process.env.ETHERSCAN_KEY!,
           sepolia: process.env.ETHERSCAN_KEY!,
           'base-sepolia': process.env.BASESCAN_KEY!,
           base: process.env.BASESCAN_KEY!,
