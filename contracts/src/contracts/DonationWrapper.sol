@@ -19,6 +19,12 @@ contract DonationWrapper is
     Native,
     PublicGoodAttester
 {
+
+    event InitializeEAS(address indexed eas);
+    event Withdraw();
+    event Donate(uint256 roundId, bytes voteData, uint256 amount);
+    event Deposit(address indexed donor, bytes message);
+
     error Unauthorized();
     error InsufficientFunds();
     error NoRoundOnDestination();
@@ -128,6 +134,8 @@ contract DonationWrapper is
             params.exclusivityDeadline,
             message
         );
+
+        emit Deposit(msg.sender, message);
     }
 
     /**
@@ -194,6 +202,8 @@ contract DonationWrapper is
         );
 
         _vote(roundId, voteData, permit2Data.permit.permitted.amount);
+        
+        emit Donate(roundId, voteData, permit2Data.permit.permitted.amount);
     }
 
     /**
@@ -307,6 +317,7 @@ contract DonationWrapper is
     function withdraw() external onlyOwner {
         (bool success, ) = msg.sender.call{value: address(this).balance}("");
         require(success, "Failed to withdraw.");
+        emit Withdraw();
     }
 
     /**
@@ -317,6 +328,7 @@ contract DonationWrapper is
     function initializeEAS(address eas, bytes32 easSchema) external onlyOwner {
         if (address(easContract) != address(0)) revert EasAlreadySet();
         _initializeEAS(eas, easSchema);
+        emit InitializeEAS(eas);
     }
 
     /**
