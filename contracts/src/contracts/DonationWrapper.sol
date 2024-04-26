@@ -27,7 +27,7 @@ contract DonationWrapper is
     event Deposit(address indexed donor, bytes message);
 
     error Unauthorized();
-    error InsufficientFunds();
+    error InvalidAmount();
     error NoRoundOnDestination();
     error EasAlreadySet();
 
@@ -187,8 +187,8 @@ contract DonationWrapper is
             (address, PermitType, Permit2Data)
         );
 
-        if (amount < permit2Data.permit.permitted.amount)
-            revert InsufficientFunds();
+        if (amount != permit2Data.permit.permitted.amount)
+            revert InvalidAmount();
 
         // Only support WETH transfers for now. This can be switched to a swap() call in the future to allow for wider token support.
         unwrapWETH(amount);
