@@ -23,16 +23,12 @@ contract DonationWrapper is
     error InsufficientFunds();
     error NoRoundOnDestination();
 
-    event Logger(bytes);
-
     address public SPOKE_POOL;
     address public ALLO_ADDRESS;
     address public WETH_ADDRESS;
     V3SpokePoolInterface spokePool;
     IAllo alloContract;
     WETH9Interface wethContract;
-
-    ISignatureTransfer public permit2;
 
     struct DepositParams {
         address recipient;
