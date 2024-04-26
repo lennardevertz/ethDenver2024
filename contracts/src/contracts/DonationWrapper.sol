@@ -22,6 +22,7 @@ contract DonationWrapper is
     error Unauthorized();
     error InsufficientFunds();
     error NoRoundOnDestination();
+    error EasAlreadySet();
 
     address public SPOKE_POOL;
     address public ALLO_ADDRESS;
@@ -309,22 +310,12 @@ contract DonationWrapper is
     }
 
     /**
-     * @notice Set up Allo round
-     * @notice Allows to set allo round to Null -> attempted cross chain donation
-     *         will return and thus deposit sent funds back to donor
-     * @param allo The new address of the Allo contract.
-     */
-    function initializeAllo(address allo) external onlyOwner {
-        ALLO_ADDRESS = allo;
-        alloContract = IAllo(ALLO_ADDRESS);
-    }
-
-    /**
      * @notice Set up EAS contract
      * @param eas The new address of the EAS contract.
      * @param easSchema The schema that will host the attestation.
      */
     function initializeEAS(address eas, bytes32 easSchema) external onlyOwner {
+        if (address(easContract) != address(0)) revert EasAlreadySet();
         _initializeEAS(eas, easSchema);
     }
 

@@ -11,8 +11,7 @@ import {NO_EXPIRATION_TIME, EMPTY_UID} from "./Common.sol";
 contract PublicGoodAttester {
     error InvalidEAS();
 
-    // The address of the global EAS contract.
-    IEAS private EAS;
+    IEAS easContract;
     bytes32 public EAS_SCHEMA;
 
     constructor(address eas, bytes32 easSchema) {
@@ -31,7 +30,7 @@ contract PublicGoodAttester {
         if (eas == address(0)) {
             revert InvalidEAS();
         }
-        EAS = IEAS(eas);
+        easContract = IEAS(eas);
         EAS_SCHEMA = easSchema;
     }
 
@@ -55,8 +54,8 @@ contract PublicGoodAttester {
         uint256 _amount,
         address _relayer
     ) internal {
-        if (address(EAS) == address(0)) return;
-        EAS.attest(
+        if (address(easContract) == address(0)) return;
+        easContract.attest(
             AttestationRequest({
                 schema: EAS_SCHEMA,
                 data: AttestationRequestData({
