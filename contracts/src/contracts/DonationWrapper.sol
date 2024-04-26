@@ -30,6 +30,7 @@ contract DonationWrapper is
     error InvalidAmount();
     error NoRoundOnDestination();
     error EasAlreadySet();
+    error OutputAmountZero();
 
     address public SPOKE_POOL;
     address public ALLO_ADDRESS;
@@ -121,6 +122,7 @@ contract DonationWrapper is
         DepositParams memory params,
         bytes memory message
     ) internal {
+        if (params.outputAmount == 0) revert OutputAmountZero();
         spokePool.depositV3{value: msg.value}(
             msg.sender, // donor
             params.recipient,
