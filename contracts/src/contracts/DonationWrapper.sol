@@ -117,8 +117,8 @@ contract DonationWrapper is
         spokePool.depositV3{value: msg.value}(
             msg.sender, // donor
             params.recipient,
-            params.inputToken,
-            params.outputToken,
+            WETH_ADDRESS, // inputToken
+            address(0), // outputToken
             params.inputAmount,
             params.outputAmount,
             params.destinationChainId,
