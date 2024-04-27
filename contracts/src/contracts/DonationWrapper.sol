@@ -20,7 +20,6 @@ contract DonationWrapper is
     Native,
     PublicGoodAttester
 {
-
     event InitializeEAS(address indexed eas);
     event Withdraw();
     event Donate(uint256 roundId, bytes voteData, uint256 amount);
@@ -38,6 +37,10 @@ contract DonationWrapper is
     V3SpokePoolInterface spokePool;
     IAllo alloContract;
     WETH9Interface wethContract;
+
+    bytes32 immutable DOMAIN_SEPARATOR;
+    bytes32 immutable VOTING_DATA_TYPEHASH;
+    mapping(address => uint256) public nonces;
 
     struct DepositParams {
         address recipient;
@@ -84,7 +87,22 @@ contract DonationWrapper is
         spokePool = V3SpokePoolInterface(SPOKE_POOL);
         alloContract = IAllo(ALLO_ADDRESS);
         wethContract = WETH9Interface(WETH_ADDRESS);
+
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                keccak256(
+                    "EIP712Domain(string name,string version,address verifyingContract)"
+                ),
+                keccak256(bytes("IDrissCrossChainDonations")),
+                keccak256(bytes("1")),
+                address(this)
+            )
+        );
+        VOTING_DATA_TYPEHASH = keccak256(
+            "Donation(uint256 chainId,uint256 roundId,address donor,bytes voteParams,uint256 nonce,uint256 validUntil)"
+        );
     }
+
 
     /**
      * @notice Initiates a cross chain donation by depositing to Across+.
@@ -95,17 +113,12 @@ contract DonationWrapper is
         DepositParams memory params,
         bytes memory message
     ) external payable nonReentrant {
-        (bytes memory donationData, bytes memory signature) = abi.decode(
+        (, , address donor, , , , ) = abi.decode(
             message,
-            (bytes, bytes)
+            (uint256, uint256, address, bytes, uint256, uint256, bytes)
         );
 
-        (, address donor, ) = abi.decode(
-            donationData,
-            (uint256, address, bytes) // roundId, donor, voteParams(encoded)
-        );
-
-        if (!verifyDonation(donationData, signature) || msg.sender != donor)
+        if (!verifyDonation(message) || msg.sender != donor)
             revert Unauthorized();
 
         makeDeposit(params, message);
@@ -156,34 +169,38 @@ contract DonationWrapper is
     ) external payable nonReentrant {
         if (msg.sender != SPOKE_POOL) revert Unauthorized();
 
-        (bytes memory donationData, bytes memory signature) = abi.decode(
-            message,
-            (bytes, bytes)
-        );
+        if (!verifyDonation(message)) revert Unauthorized();
 
-        if (!verifyDonation(donationData, signature)) revert Unauthorized();
+        (, uint256 roundId, address donor, bytes memory voteParams, , , ) = abi
+            .decode(
+                message,
+                (uint256, uint256, address, bytes, uint256, uint256, bytes)
+            );
 
-        handleDonation(donationData, amount, tokenSent, relayer);
+        handleDonation(roundId, donor, voteParams, amount, tokenSent, relayer);
+
+        nonces[donor]++;
     }
 
     /**
      * @notice Processes a donation by unwrapping WETH, attesting, and voting.
-     * @param donationData The donation data including the roundID, donor address and vote parameters.
-     * @param amount The amount of WETH to unwrap and donate.
+     * @dev This function handles the conversion of WETH to the required format, verifies permissions through permit data,
+     *      attests the donation, and records a vote based on the donation data.
+     * @param roundId The unique identifier of the donation round.
+     * @param donor The address of the donor making the donation.
+     * @param voteData Encoded data containing the vote information.
+     * @param amount The amount of funds to allocate.
      * @param tokenSent The token sent (currently only WETH supported).
      * @param relayer The address of the relayer.
      */
     function handleDonation(
-        bytes memory donationData,
+        uint256 roundId,
+        address donor,
+        bytes memory voteData,
         uint256 amount,
         address tokenSent,
         address relayer
     ) internal {
-        (uint256 roundId, address donor, bytes memory voteData) = abi.decode(
-            donationData,
-            (uint256, address, bytes) // roundId, donor, voteParams(encoded)
-        );
-
         (address recipientId, , Permit2Data memory permit2Data) = abi.decode(
             voteData,
             (address, PermitType, Permit2Data)
@@ -205,7 +222,7 @@ contract DonationWrapper is
         );
 
         _vote(roundId, voteData, permit2Data.permit.permitted.amount);
-        
+
         emit Donate(roundId, voteData, permit2Data.permit.permitted.amount);
     }
 
@@ -228,7 +245,7 @@ contract DonationWrapper is
 
     /**
      * @notice Converts WETH into ETH.
-     * @notice This contract in general only forwards native ETH, 
+     * @notice This contract in general only forwards native ETH,
      *         which is why this function can be publicly called by anyone.
      * @param _amount The amount of WETH to convert.
      */
@@ -236,61 +253,42 @@ contract DonationWrapper is
         wethContract.withdraw(_amount);
     }
 
-    /**
-     * @notice Verifies the authenticity of a donation using user's signature.
-     * @dev This function checks if the donation data signed by the donor matches the provided signature.
-     * @param donationData Encoded donation details.
-     * @param signature Signature proving the donation was authorized by the donor.
-     * @return bool True if the signature is valid, false otherwise.
-    */
-    function verifyDonation(
-        bytes memory donationData,
-        bytes memory signature
-    ) public pure returns (bool) {
-        (, address donor, ) = abi.decode(
-            donationData,
-            (uint256, address, bytes) // roundId, donor, voteParams(encoded)
+    function verifyDonation(bytes memory encoded) public view returns (bool) {
+        (
+            uint256 chainId,
+            uint256 roundId,
+            address donor,
+            bytes memory voteParams,
+            uint256 nonce,
+            uint256 validUntil,
+            bytes memory signature
+        ) = abi.decode(
+                encoded,
+                (uint256, uint256, address, bytes, uint256, uint256, bytes)
+            );
+
+        bytes32 structHash = keccak256(
+            abi.encode(
+                VOTING_DATA_TYPEHASH,
+                chainId,
+                roundId,
+                donor,
+                keccak256(voteParams),
+                nonce,
+                validUntil
+            )
         );
 
-        return verify(donor, donationData, signature);
+        bytes32 digest = keccak256(
+            abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash)
+        );
+
+        address signer = ECDSA.recover(digest, signature);
+        require(nonce == nonces[signer], "Invalid nonce");
+        require(block.chainid == chainId, "Invalid chain");
+        require(block.timestamp <= validUntil, "Signature has expired");
+        return signer == donor;
     }
-
-    function getMessageHash(
-        bytes memory _message
-    ) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(_message));
-    }
-
-    function getEthSignedMessageHash(
-        bytes32 _messageHash
-    ) public pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    "\x19Ethereum Signed Message:\n32",
-                    _messageHash
-                )
-            );
-    }
-
-    /**
-     * @notice Verifies a signed message using ECDSA.recover.
-     * @param _signer The expected signer's address.
-     * @param _message The original message that was signed.
-     * @param _signature The signature to verify.
-     * @return bool True if the signature was made by the signer on the given message.
-     */
-    function verify(
-        address _signer,
-        bytes memory _message,
-        bytes memory _signature
-    ) public pure returns (bool) {
-        bytes32 messageHash = getMessageHash(_message);
-        bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
-
-        return ECDSA.recover(ethSignedMessageHash, _signature) == _signer;
-    }
-
 
     /**
      * @notice Withdraw accidentally sent native currency

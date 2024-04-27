@@ -24,9 +24,9 @@ async function main() {
     );
     const DonationWrapperFactory = await ethers.getContractFactory("DonationWrapper");
 
-     // Estimate the gas required for deployment
-    const estimatedGas = await DonationWrapperFactory.getDeployTransaction(...constructorArguments).estimateGas();
-    console.log(`Estimated gas for deployment: ${estimatedGas}`);
+    // // Estimate the gas required for deployment
+    // const estimatedGas = await DonationWrapperFactory.getDeployTransaction(...constructorArguments).estimateGas();
+    // console.log(`Estimated gas for deployment: ${estimatedGas}`);
 
     await wrapper.waitForDeployment();
 
