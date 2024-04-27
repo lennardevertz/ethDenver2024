@@ -201,7 +201,7 @@ async function createEIP712SignatureWallet(
     // console.log("Wallet address:", wallet.address)
 
     const data2 = {
-        chainId: 1,
+        chainId: destinationChainId,
         roundId: ROUND_ID,
         donor: wallet.address,
         voteParams: voteParam,

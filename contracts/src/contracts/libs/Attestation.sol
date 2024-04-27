@@ -36,6 +36,7 @@ contract PublicGoodAttester {
 
     /**
      * @notice Creates an attestation for a donor's contribution within a Gitcoin round.
+     * @notice Emits an `Attested` event on the EAS contract.
      * @dev This function submits an attestation request through EAS if it's set.
      * The attestation includes information about the donation origin.
      * It's an internal function and can only be called within the contract itself.
