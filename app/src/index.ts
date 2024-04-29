@@ -80,6 +80,7 @@ async function encodeDataAndSignature(
         voteParams: string;
         nonce: number;
         validUntil: number;
+        verifyingContract: string;
     },
     signature: string
 ) {
@@ -91,6 +92,7 @@ async function encodeDataAndSignature(
             "bytes",
             "uint256",
             "uint256",
+            "address",
             "bytes",
         ],
         [
@@ -100,6 +102,7 @@ async function encodeDataAndSignature(
             data.voteParams,
             data.nonce,
             data.validUntil,
+            data.verifyingContract,
             signature,
         ]
     );
@@ -108,7 +111,6 @@ async function encodeDataAndSignature(
 
 async function createEIP712Signature(
     signer: ethers.providers.JsonRpcSigner,
-    contractAddress: string,
     data: {
         chainId: number;
         roundId: number;
@@ -116,12 +118,12 @@ async function createEIP712Signature(
         voteParams: string; // Already encoded bytes from `generateVote`
         nonce: number;
         validUntil: number;
+        verifyingContract: string;
     }
 ) {
     const domain = {
         name: "IDrissCrossChainDonations",
         version: "1",
-        verifyingContract: contractAddress,
     };
     const types = {
         Donation: [
@@ -131,6 +133,7 @@ async function createEIP712Signature(
             {name: "voteParams", type: "bytes"},
             {name: "nonce", type: "uint256"},
             {name: "validUntil", type: "uint256"},
+            {name: "verifyingContract", type: "address"},
         ],
     };
 
@@ -152,12 +155,12 @@ async function createEIP712SignatureWallet(
         voteParams: string; // Already encoded bytes from `generateVote`
         nonce: number;
         validUntil: number;
+        verifyingContract: string;
     }
 ) {
     const domain = {
         name: "IDrissCrossChainDonations",
         version: "1",
-        verifyingContract: contractAddress,
     };
     const types = {
         Donation: [
@@ -167,6 +170,7 @@ async function createEIP712SignatureWallet(
             {name: "voteParams", type: "bytes"},
             {name: "nonce", type: "uint256"},
             {name: "validUntil", type: "uint256"},
+            {name: "verifyingContract", type: "address"},
         ],
     };
 
@@ -190,6 +194,7 @@ async function createEIP712SignatureWallet(
     //     voteParams: voteParam,
     //     nonce: 0,
     //     validUntil: Math.round(Date.now() / 1000) + 3600, // 1 hour
+    //     verifyingContract: contractAddress
     // };
 
     // const encodedBytes = await createEIP712Signature(
@@ -207,6 +212,7 @@ async function createEIP712SignatureWallet(
         voteParams: voteParam,
         nonce: 0,
         validUntil: Math.round(Date.now() / 1000) + 3600, // 1 hour
+        verifyingContract: contractAddress
     };
 
     await createEIP712SignatureWallet(
