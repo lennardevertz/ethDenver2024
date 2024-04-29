@@ -178,10 +178,10 @@ contract DonationWrapper is
             );
 
         require(nonce == nonces[donor], "Invalid nonce");
+        nonces[donor]++;
 
         handleDonation(roundId, donor, voteParams, amount, tokenSent, relayer);
 
-        nonces[donor]++;
     }
 
     /**
